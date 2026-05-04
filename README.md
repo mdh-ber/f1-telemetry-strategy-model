@@ -1,4 +1,9 @@
-F1 Pit Stop Strategy
+F1 Pit Stop Strategy 
+
+Group members (G) -
+JAYANTH RAYAPUREDDI
+RAMAKRISHNA VAMSI KOLAPALLI
+DEEPSIKA NIMMAGADDA
 
 Project Overview
 
