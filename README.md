@@ -32,5 +32,3 @@ Data includes:
 - Stint information
 - Track conditions
 - Driver performance metrics
-
-## 🏗️ System Architecture
