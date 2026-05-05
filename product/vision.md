@@ -1,6 +1,6 @@
  PRODUCT VISION BOARD
- Product Name (you can use this)
-PitSense AI (or keep your repo name if required)
+ 
+PitSense AI 
  Vision Statement:
 “To provide data-driven insights into Formula 1 race strategies by using machine learning to analyze telemetry and predict pit stop decisions through an interactive analytics dashboard.”
  Problem Statement:
