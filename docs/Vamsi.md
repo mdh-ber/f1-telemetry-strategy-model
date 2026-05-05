@@ -12,3 +12,10 @@
 
 2. installed new image from docker hub tried working with sitespeed.io, got the image tried extracting the web analytics of youtube site using sitespeed.io and got the output.
 
+
+04th May
+
+1. learned fast api
+2. finished the given class assignment using fastapi and docker compose
+3. created iterations for the group project
+
