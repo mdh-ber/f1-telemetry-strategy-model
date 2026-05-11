@@ -19,3 +19,8 @@
 2. finished the given class assignment using fastapi and docker compose
 3. created iterations for the group project
 
+11th May
+
+1. Discussed with project group about Checklist(Which gave by professor) for midterm presentation.
+2. Planned for sprints time table and discussed about features which we want showcase in our project and person wise responsiability in project.
+3. Created basic UI to test and connect LangFlow with basic HTML code to test how its working.
