@@ -1,0 +1,80 @@
+Architecture Structure for PitSense AI
+
+User
+ |
+ v
+Streamlit Dashboard
+ |
+ |  User selects race, driver, lap number, tyre type, tyre age
+ v
+FastAPI Backend
+ |
+ |  Sends input data for prediction
+ v
+ML Model + Preprocessing Logic
+ |
+ |  Processes input and predicts pit stop probability
+ v
+Prediction Result
+ |
+ |  Returns pit stop recommendation
+ v
+Streamlit Dashboard
+ |
+ v
+User views graphs, insights, and prediction
+
+
+------------------------------------------------------------------------------------------------
+
+Full Architecture Flow
+
+FastF1 API
+   |
+   v
+Data Collection
+   |
+   v
+Data Cleaning and Preprocessing
+   |
+   v
+Feature Engineering
+   |
+   v
+Scikit-learn ML Model
+   |
+   v
+Saved Model File
+   |
+   v
+FastAPI Backend
+   |
+   v
+Streamlit Dashboard
+   |
+   v
+User
+
+------------------------------------------------------------------------------------------------------------------
+
+Docker-Based Architecture
+
+Docker Compose
+ |
+ |-- backend service
+ |     |
+ |     |-- FastAPI application
+ |     |-- Loads trained ML model
+ |     |-- Provides prediction API
+ |
+ |-- frontend service
+ |     |
+ |     |-- Streamlit dashboard
+ |     |-- Displays graphs and prediction results
+ |     |-- Sends requests to backend API
+ |
+ |-- model folder
+       |
+       |-- Stores trained ML model
+       |-- Stores preprocessing logic
+

@@ -1,0 +1,26 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pitsense_backend
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: pitsense_frontend
+
+    ports:
+      - "8501:8501"
+
+    volumes:
+      - ./frontend:/app
+
+    depends_on:
+      - backend
