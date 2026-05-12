@@ -17,3 +17,8 @@ created some personas using personalisation, job/context, education/technical sk
 created scenarios using objective, actors, activities, problem/gap, resolution.
 shared our work with other groups and shared our opinions on our projects
 started working on user stories.
+
+DATW :12-05-26
+learned about langflow and ollama. 
+finished a docker container and opened the basic langflow blueprint
+worked creating a small model and been successful in it.
