@@ -24,3 +24,8 @@
 1. Discussed with project group about Checklist(Which gave by professor) for midterm presentation.
 2. Planned for sprints time table and discussed about features which we want showcase in our project and person wise responsiability in project.
 3. Created basic UI to test and connect LangFlow with basic HTML code to test how its working.
+
+12th May
+
+1. I learned about Langflow and Ollama, successfully completed a Docker container setup, and launched the basic Langflow blueprint.
+2. successfully i also created and tested a small AI model workflow.
