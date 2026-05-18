@@ -31,3 +31,7 @@
 2. vector 
 3. calculation the vector distance
 4. hugging face different embedding models filter , removing duuplicates in lang flow 
+12th May
+
+1. I learned about Langflow and Ollama, successfully completed a Docker container setup, and launched the basic Langflow blueprint.
+2. successfully i also created and tested a small AI model workflow.
