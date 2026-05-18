@@ -25,6 +25,12 @@
 2. Planned for sprints time table and discussed about features which we want showcase in our project and person wise responsiability in project.
 3. Created basic UI to test and connect LangFlow with basic HTML code to test how its working.
 
+18th May
+
+1. embeding 
+2. vector 
+3. calculation the vector distance
+4. hugging face different embedding models filter , removing duuplicates in lang flow 
 12th May
 
 1. I learned about Langflow and Ollama, successfully completed a Docker container setup, and launched the basic Langflow blueprint.
