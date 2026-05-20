@@ -2,19 +2,31 @@ import streamlit as st
 
 import requests
  
-st.title("PitSense AI")
+st.set_page_config(
 
-st.subheader("F1 Pit Stop Prediction Dashboard")
+    page_title="PitSense AI",
+
+    page_icon="🏎️",
+
+    layout="wide"
+
+)
  
-lap_number = st.number_input("Lap Number", min_value=1, max_value=100, value=24)
+st.title("🏎️ PitSense AI")
 
-tyre_life = st.number_input("Tyre Life", min_value=1, max_value=80, value=18)
-
-stint = st.number_input("Stint", min_value=1, max_value=10, value=1)
-
-position = st.number_input("Track Position", min_value=1, max_value=20, value=3)
+st.markdown("### F1 Pit Stop Strategy Prediction Dashboard")
  
-compound = st.selectbox(
+st.sidebar.header("Race Simulation Inputs")
+ 
+lap_number = st.sidebar.number_input("Lap Number", min_value=1, max_value=100, value=24)
+
+tyre_life = st.sidebar.number_input("Tyre Life", min_value=1, max_value=80, value=18)
+
+stint = st.sidebar.number_input("Stint", min_value=1, max_value=10, value=1)
+
+position = st.sidebar.number_input("Track Position", min_value=1, max_value=20, value=3)
+ 
+compound = st.sidebar.selectbox(
 
     "Tyre Compound",
 
@@ -22,69 +34,105 @@ compound = st.selectbox(
 
 )
  
-driver = st.text_input("Driver Code", value="VER")
+driver = st.sidebar.text_input("Driver Code", value="VER")
  
-if st.button("Predict Pit Stop"):
+st.divider()
  
-    payload = {
-
-        "LapNumber": lap_number,
-
-        "TyreLife": tyre_life,
-
-        "Stint": stint,
-
-        "Position": position,
-
-        "Compound": compound,
-
-        "Driver": driver
-
-    }
+col1, col2 = st.columns([1, 1])
  
-    response = requests.post(
+with col1:
 
-        "http://backend:8000/predict-with-explanation",
+    st.subheader("Simulation Summary")
 
-        json=payload
+    st.write(f"**Driver:** {driver}")
 
-    )
+    st.write(f"**Lap Number:** {lap_number}")
+
+    st.write(f"**Tyre Life:** {tyre_life}")
+
+    st.write(f"**Stint:** {stint}")
+
+    st.write(f"**Track Position:** {position}")
+
+    st.write(f"**Tyre Compound:** {compound}")
  
-    if response.status_code == 200:
+with col2:
+
+    st.subheader("Prediction Result")
  
-        result = response.json()
+    if st.button("Predict Pit Stop", use_container_width=True):
+
+        payload = {
+
+            "LapNumber": lap_number,
+
+            "TyreLife": tyre_life,
+
+            "Stint": stint,
+
+            "Position": position,
+
+            "Compound": compound,
+
+            "Driver": driver
+
+        }
  
-        st.success("Prediction Complete")
+        try:
+
+            response = requests.post(
+
+                "http://backend:8000/predict-with-explanation",
+
+                json=payload,
+
+                timeout=10
+
+            )
  
-        st.metric(
+            if response.status_code == 200:
 
-            "Pit Stop Next Lap",
-
-            result["pit_stop_next_lap"]
-
-        )
+                result = response.json()
  
-        st.metric(
+                if result["pit_stop_next_lap"] == 1:
 
-            "Probability of Pit Stop",
+                    st.error("Pit Stop Likely Next Lap")
 
-            round(result["probability_pit"], 3)
+                else:
 
-        )
+                    st.success("No Immediate Pit Stop Expected")
  
-        st.metric(
-
-            "Probability of No Pit Stop",
-
-            round(result["probability_no_pit"], 3)
-
-        )
+                metric1, metric2 = st.columns(2)
  
-        st.subheader("Strategy Explanation")
+                with metric1:
 
-        st.write(result["explanation"])
+                    st.metric(
+
+                        "Pit Stop Probability",
+
+                        round(result["probability_pit"], 3)
+
+                    )
  
-    else:
+                with metric2:
 
-        st.error("Prediction API failed")
+                    st.metric(
+
+                        "No Pit Probability",
+
+                        round(result["probability_no_pit"], 3)
+
+                    )
+ 
+                st.subheader("Strategy Explanation")
+
+                st.info(result["explanation"])
+ 
+            else:
+
+                st.error("Prediction API failed")
+ 
+        except requests.exceptions.RequestException:
+
+            st.error("Could not connect to backend API")
  
