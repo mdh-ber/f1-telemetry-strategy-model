@@ -12,15 +12,13 @@ services:
       - .:/app
 
   frontend:
-    build:
-      context: ./frontend
-    container_name: pitsense_frontend
-
-    ports:
-      - "8501:8501"
-
-    volumes:
-      - .:/app
-
-    depends_on:
-      - backend
+  build:
+    context: .
+    dockerfile: frontend/Dockerfile
+  container_name: pitsense_frontend
+  ports:
+    - "8501:8501"
+  volumes:
+    - .:/app
+  depends_on:
+    - backend
