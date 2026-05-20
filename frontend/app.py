@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+from pathlib import Path
 
 st.set_page_config(
     page_title="PitSense AI",
@@ -10,6 +11,7 @@ st.set_page_config(
 )
 
 BASE_API = "http://backend:8000"
+HERO_IMAGE = Path("frontend/assets/f1_car.png")
 
 if "history" not in st.session_state:
     st.session_state.history = []
@@ -25,11 +27,15 @@ def get_drivers():
     return requests.get(f"{BASE_API}/analytics/drivers", timeout=10).json()["drivers"]
 
 
+def get_driver_data(driver):
+    return requests.get(f"{BASE_API}/analytics/driver/{driver}", timeout=10).json()
+
+
 try:
     summary = get_summary()
     drivers = get_drivers()
 except Exception:
-    st.error("Backend API is not available. Start Docker Compose and make sure FastAPI is running.")
+    st.error("Backend API is not available. Start Docker Compose and FastAPI first.")
     st.stop()
 
 
@@ -42,22 +48,20 @@ html, body, [class*="css"] {
 }
 
 .stApp {
-    background:
-        radial-gradient(circle at 70% 20%, rgba(255, 36, 24, 0.18), transparent 35%),
-        linear-gradient(135deg, #03070d 0%, #070b12 45%, #070707 100%);
+    background: linear-gradient(135deg, #05070d 0%, #070b12 45%, #020202 100%);
     color: white;
 }
 
 .block-container {
-    padding-top: 1.2rem;
-    max-width: 1280px;
+    padding-top: 1rem;
+    max-width: 1450px;
 }
 
-.navbar {
+.topbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 18px 4px 24px 4px;
+    justify-content: space-between;
+    padding: 20px 0 24px 0;
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -67,260 +71,132 @@ html, body, [class*="css"] {
     gap: 18px;
 }
 
-.f1-mark {
+.f1-logo {
     color: #ff1e00;
-    font-size: 34px;
+    font-size: 36px;
     font-weight: 1000;
     letter-spacing: -3px;
-    border-right: 1px solid rgba(255,255,255,0.28);
     padding-right: 20px;
+    border-right: 1px solid rgba(255,255,255,0.28);
 }
 
-.brand-name {
-    font-size: 24px;
+.brand-text {
+    font-size: 26px;
     font-weight: 900;
-    letter-spacing: 1px;
 }
 
-.brand-name span {
+.brand-text span {
     color: #ff1e00;
 }
 
-.nav-links {
-    display: flex;
-    gap: 34px;
+.nav-note {
     font-size: 13px;
     font-weight: 800;
-    color: #e5e7eb;
-    letter-spacing: 1px;
-}
-
-.nav-button {
-    border: 1px solid #ff1e00;
-    padding: 12px 22px;
-    border-radius: 8px;
-    color: white;
+    color: #cbd5e1;
 }
 
 .hero {
     margin-top: 42px;
     display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 42px;
+    grid-template-columns: 0.95fr 1.25fr;
+    gap: 38px;
     align-items: center;
 }
 
 .kicker {
     color: #ff1e00;
-    font-size: 14px;
     font-weight: 900;
-    letter-spacing: 1.8px;
+    letter-spacing: 1.6px;
+    font-size: 13px;
     margin-bottom: 18px;
 }
 
 .hero-title {
     font-size: 64px;
-    line-height: 0.98;
+    line-height: 1;
     font-weight: 1000;
-    letter-spacing: -2px;
 }
 
 .hero-title span {
     color: #ff1e00;
 }
 
-.hero-text {
+.hero-copy {
     color: #cbd5e1;
     font-size: 17px;
-    line-height: 1.8;
+    line-height: 1.7;
+    margin-top: 22px;
     max-width: 560px;
-    margin-top: 24px;
 }
 
-.hero-actions {
-    display: flex;
-    gap: 18px;
-    margin-top: 32px;
+.hero-image-box {
+    background: radial-gradient(circle at center, rgba(255,30,0,0.25), transparent 55%);
+    border-radius: 26px;
+    border: 1px solid rgba(255,255,255,0.10);
+    padding: 10px;
+    box-shadow: 0 0 70px rgba(255,30,0,0.20);
 }
 
-.primary-btn {
-    background: linear-gradient(90deg, #ff1e00, #c90000);
-    padding: 16px 28px;
-    border-radius: 8px;
-    font-weight: 900;
-    color: white;
-    display: inline-block;
-}
-
-.secondary-btn {
-    border: 1px solid rgba(255,255,255,0.55);
-    padding: 16px 28px;
-    border-radius: 8px;
-    font-weight: 900;
-    color: white;
-    display: inline-block;
-}
-
-.hero-visual {
-    height: 420px;
-    border-radius: 24px;
-    background:
-        linear-gradient(90deg, rgba(3,7,13,0.15), rgba(3,7,13,0.96)),
-        url("https://images.unsplash.com/photo-1558611848-73f7eb4001a1?q=80&w=1400&auto=format&fit=crop");
-    background-size: cover;
-    background-position: center;
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 0 60px rgba(255, 30, 0, 0.15);
-}
-
-.feature-strip {
-    display: flex;
-    gap: 42px;
-    margin-top: 40px;
-    color: #cbd5e1;
-    font-size: 13px;
-    font-weight: 800;
-}
-
-.metrics {
-    margin-top: 52px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-}
-
-.metric-card {
+.metric-card, .panel, .feature-card {
     background: rgba(255,255,255,0.035);
     border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 14px;
+    border-radius: 18px;
     padding: 26px;
 }
 
 .metric-value {
-    font-size: 34px;
+    color: white;
+    font-size: 38px;
     font-weight: 900;
 }
 
 .metric-label {
     color: #94a3b8;
     font-size: 13px;
-    margin-top: 6px;
-}
-
-.section {
-    margin-top: 70px;
-    padding: 34px;
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 22px;
-}
-
-.section-center {
-    text-align: center;
-}
-
-.section-kicker {
-    color: #ff1e00;
-    font-weight: 900;
-    font-size: 13px;
-    letter-spacing: 1.6px;
 }
 
 .section-title {
-    font-size: 34px;
+    font-size: 36px;
     font-weight: 900;
-    margin-top: 8px;
+    margin: 45px 0 20px 0;
 }
 
-.section-subtitle {
-    color: #94a3b8;
-    margin-top: 8px;
-}
-
-.panel {
-    background: rgba(8, 13, 22, 0.92);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 16px;
-    padding: 26px;
-    height: 100%;
-}
-
-.result-box-red {
-    background: rgba(255, 30, 0, 0.15);
-    border: 1px solid rgba(255, 30, 0, 0.5);
-    border-radius: 12px;
+.result-red {
+    background: rgba(255,30,0,0.14);
+    border: 1px solid rgba(255,30,0,0.55);
+    color: #ff3b30;
     padding: 22px;
-    color: #ff4b3e;
+    border-radius: 14px;
     font-weight: 900;
     font-size: 18px;
 }
 
-.result-box-green {
-    background: rgba(0, 180, 100, 0.14);
-    border: 1px solid rgba(0, 255, 136, 0.45);
-    border-radius: 12px;
-    padding: 22px;
+.result-green {
+    background: rgba(0,180,100,0.14);
+    border: 1px solid rgba(0,255,136,0.45);
     color: #00ff88;
+    padding: 22px;
+    border-radius: 14px;
     font-weight: 900;
     font-size: 18px;
 }
 
 .ai-box {
-    border-left: 4px solid #ff1e00;
-    padding: 18px 20px;
-    background: rgba(0,0,0,0.35);
-    border-radius: 8px;
+    border-left: 5px solid #ff1e00;
+    background: rgba(0,0,0,0.45);
+    padding: 20px;
+    border-radius: 12px;
+    line-height: 1.7;
     color: #dbeafe;
-    line-height: 1.7;
-    margin-top: 18px;
-}
-
-.features-grid {
-    margin-top: 34px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 22px;
-}
-
-.feature-card {
-    background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 16px;
-    padding: 26px;
-}
-
-.feature-icon {
-    font-size: 34px;
-    color: #ff1e00;
-}
-
-.feature-heading {
-    margin-top: 18px;
-    font-size: 17px;
-    font-weight: 900;
-}
-
-.feature-copy {
-    color: #94a3b8;
-    margin-top: 10px;
-    line-height: 1.7;
-    font-size: 14px;
-}
-
-.footer {
-    text-align: center;
-    color: #64748b;
-    padding: 48px 0 20px 0;
-    font-size: 13px;
 }
 
 .stButton > button {
-    background: linear-gradient(90deg, #ff1e00, #d60000);
+    background: linear-gradient(90deg, #ff1e00, #d40000);
     color: white;
     border: none;
+    border-radius: 10px;
     height: 3.2rem;
     font-weight: 900;
-    border-radius: 9px;
 }
 
 .stButton > button:hover {
@@ -336,233 +212,285 @@ html, body, [class*="css"] {
 
 
 st.markdown("""
-<div class="navbar">
+<div class="topbar">
     <div class="brand">
-        <div class="f1-mark">F1</div>
-        <div class="brand-name">PITSENSE <span>AI</span></div>
+        <div class="f1-logo">F1</div>
+        <div class="brand-text">PITSENSE <span>AI</span></div>
     </div>
-    <div class="nav-links">
-        <div>HOME</div>
-        <div>FEATURES</div>
-        <div>SIMULATOR</div>
-        <div>ANALYTICS</div>
-        <div class="nav-button">DOCUMENTATION</div>
-    </div>
+    <div class="nav-note">AI Strategy Platform • Telemetry Intelligence • F1 Analytics</div>
 </div>
 """, unsafe_allow_html=True)
 
 
-st.markdown("""
-<div class="hero">
-    <div>
+tab_home, tab_features, tab_sim, tab_analytics, tab_about, tab_docs = st.tabs(
+    ["HOME", "FEATURES", "SIMULATOR", "ANALYTICS", "ABOUT", "DOCUMENTATION"]
+)
+
+
+with tab_home:
+    left, right = st.columns([1, 1.15])
+
+    with left:
+        st.markdown("""
         <div class="kicker">AI-POWERED F1 STRATEGY PLATFORM</div>
         <div class="hero-title">
             INTELLIGENT STRATEGY.<br>
             <span>FASTER DECISIONS.</span><br>
             RACE AHEAD.
         </div>
-        <div class="hero-text">
-            PitSense AI analyzes race telemetry, tyre conditions, stint behavior, 
-            and machine learning predictions to support faster pit stop strategy 
+        <div class="hero-copy">
+            PitSense AI analyzes race telemetry, tyre conditions, stint behavior,
+            and machine learning predictions to support faster pit stop strategy
             decisions with AI-generated race engineer explanations.
         </div>
-        <div class="hero-actions">
-            <div class="primary-btn">TRY AI SIMULATOR →</div>
-            <div class="secondary-btn">EXPLORE ANALYTICS</div>
-        </div>
-        <div class="feature-strip">
-            <div>▦ MACHINE LEARNING</div>
-            <div>⌁ TELEMETRY ANALYTICS</div>
-            <div>✦ AI STRATEGIST</div>
-            <div>◉ REAL-TIME INSIGHTS</div>
-        </div>
-    </div>
-    <div class="hero-visual"></div>
-</div>
-""", unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+
+    with right:
+        st.markdown('<div class="hero-image-box">', unsafe_allow_html=True)
+        if HERO_IMAGE.exists():
+            st.image(str(HERO_IMAGE), use_container_width=True)
+        else:
+            st.warning("Add your F1 car image at frontend/assets/f1_car.png")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown('<div class="section-title">Platform Metrics</div>', unsafe_allow_html=True)
+
+    c1, c2, c3, c4 = st.columns(4)
+    metrics = [
+        ("Telemetry Records", summary["total_records"]),
+        ("Drivers", summary["total_drivers"]),
+        ("Tyre Compounds", summary["total_compounds"]),
+        ("Average Lap Time", f"{summary['average_lap_time']:.2f}s"),
+    ]
+
+    for col, item in zip([c1, c2, c3, c4], metrics):
+        with col:
+            st.markdown(
+                f"""
+                <div class="metric-card">
+                    <div class="metric-value">{item[1]}</div>
+                    <div class="metric-label">{item[0]}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
 
-st.markdown(f"""
-<div class="metrics">
-    <div class="metric-card">
-        <div class="metric-value">{summary["total_records"]}</div>
-        <div class="metric-label">Telemetry Records</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-value">{summary["total_drivers"]}</div>
-        <div class="metric-label">Drivers</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-value">{summary["total_compounds"]}</div>
-        <div class="metric-label">Tyre Compounds</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-value">{summary["average_lap_time"]:.2f}s</div>
-        <div class="metric-label">Average Lap Time</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+with tab_features:
+    st.markdown('<div class="section-title">Powerful Features for Winning Strategies</div>', unsafe_allow_html=True)
+
+    f1, f2, f3, f4 = st.columns(4)
+    features = [
+        ("🧠", "AI Strategist", "Langflow and Ollama generate race-engineer style strategy explanations."),
+        ("📈", "Telemetry Analytics", "Analyze lap pace, tyre life, stint patterns, and compound behavior."),
+        ("⚡", "Real-Time Prediction", "Machine learning predicts pit stop decisions from race conditions."),
+        ("🛡️", "Race Intelligence", "Support undercut, overcut, risk, and pit-window strategy reasoning."),
+    ]
+
+    for col, feature in zip([f1, f2, f3, f4], features):
+        with col:
+            st.markdown(
+                f"""
+                <div class="feature-card">
+                    <h1>{feature[0]}</h1>
+                    <h3>{feature[1]}</h3>
+                    <p style="color:#94a3b8; line-height:1.7;">{feature[2]}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
 
-st.markdown("""
-<div class="section section-center">
-    <div class="section-kicker">AI STRATEGY SIMULATOR</div>
-    <div class="section-title">Simulate. Analyze. Win.</div>
-    <div class="section-subtitle">
-        Configure race conditions and generate AI-powered pit stop strategy insights in real time.
-    </div>
-</div>
-""", unsafe_allow_html=True)
+with tab_sim:
+    st.markdown('<div class="section-title">AI Strategy Simulator</div>', unsafe_allow_html=True)
 
+    sim_left, sim_right = st.columns([1, 1.35])
 
-sim_left, sim_right = st.columns([1, 1.35])
+    with sim_left:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
 
-with sim_left:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
+        driver = st.selectbox("Driver", drivers)
+        lap_number = st.slider("Lap Number", 1, 100, 42)
+        tyre_life = st.slider("Tyre Life", 1, 80, 25)
+        stint = st.slider("Stint", 1, 10, 2)
+        position = st.slider("Track Position", 1, 20, 3)
 
-    driver = st.selectbox("DRIVER", drivers)
-    lap_number = st.slider("LAP NUMBER", 1, 100, 42)
-    tyre_life = st.slider("TYRE LIFE (LAPS)", 1, 80, 25)
-    stint = st.slider("STINT", 1, 10, 2)
+        compound = st.selectbox(
+            "Tyre Compound",
+            ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"],
+            index=2
+        )
 
-    compound = st.selectbox(
-        "TYRE COMPOUND",
-        ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"],
-        index=2
-    )
+        simulate = st.button("🏁 Run AI Strategy Simulation", use_container_width=True)
 
-    position = st.slider("TRACK POSITION", 1, 20, 3)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    simulate = st.button("🏁 RUN AI STRATEGY SIMULATION", use_container_width=True)
+    with sim_right:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.subheader("AI Strategy Result")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        if simulate:
+            payload = {
+                "LapNumber": lap_number,
+                "TyreLife": tyre_life,
+                "Stint": stint,
+                "Position": position,
+                "Compound": compound,
+                "Driver": driver
+            }
 
-with sim_right:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.markdown("### AI STRATEGY RESULT")
-
-    if simulate:
-        payload = {
-            "LapNumber": lap_number,
-            "TyreLife": tyre_life,
-            "Stint": stint,
-            "Position": position,
-            "Compound": compound,
-            "Driver": driver
-        }
-
-        with st.spinner("Running ML model, Langflow agent, and Ollama strategist..."):
-            try:
+            with st.spinner("Running ML model, Langflow agent, and Ollama strategist..."):
                 response = requests.post(
                     f"{BASE_API}/predict-with-langflow-explanation",
                     json=payload,
                     timeout=180
                 )
 
-                if response.status_code == 200:
-                    result = response.json()
+            if response.status_code == 200:
+                result = response.json()
 
-                    pit_probability = result["probability_pit"] * 100
-                    stay_probability = result["probability_no_pit"] * 100
+                pit_probability = result["probability_pit"] * 100
+                stay_probability = result["probability_no_pit"] * 100
 
-                    if result["pit_stop_next_lap"] == 1:
-                        decision = "PIT THIS LAP"
-                        st.markdown(
-                            '<div class="result-box-red">⚠ PIT WINDOW DETECTED</div>',
-                            unsafe_allow_html=True
-                        )
-                    else:
-                        decision = "STAY OUT"
-                        st.markdown(
-                            '<div class="result-box-green">✓ CONTINUE CURRENT STINT</div>',
-                            unsafe_allow_html=True
-                        )
-
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("Pit Probability", f"{pit_probability:.1f}%")
-                    c2.metric("Stay Out Probability", f"{stay_probability:.1f}%")
-                    c3.metric("Recommendation", decision)
-
-                    st.markdown(
-                        f'<div class="ai-box">{result["ai_explanation"]}</div>',
-                        unsafe_allow_html=True
-                    )
-
-                    st.session_state.history.append({
-                        "Driver": driver,
-                        "Lap": lap_number,
-                        "Compound": compound,
-                        "Position": position,
-                        "Recommendation": decision,
-                        "Pit Probability": round(pit_probability, 1)
-                    })
+                if result["pit_stop_next_lap"] == 1:
+                    recommendation = "PIT THIS LAP"
+                    st.markdown('<div class="result-red">⚠ PIT WINDOW DETECTED</div>', unsafe_allow_html=True)
                 else:
-                    st.error(response.text)
+                    recommendation = "STAY OUT"
+                    st.markdown('<div class="result-green">✓ CONTINUE CURRENT STINT</div>', unsafe_allow_html=True)
 
-            except Exception as e:
-                st.error(f"Could not connect to AI strategy backend: {e}")
+                a, b, c = st.columns(3)
+                a.metric("Pit Probability", f"{pit_probability:.1f}%")
+                b.metric("Stay Out", f"{stay_probability:.1f}%")
+                c.metric("Recommendation", recommendation)
+
+                st.markdown(
+                    f'<div class="ai-box">{result["ai_explanation"]}</div>',
+                    unsafe_allow_html=True
+                )
+
+                st.session_state.history.append({
+                    "Driver": driver,
+                    "Lap": lap_number,
+                    "Compound": compound,
+                    "Position": position,
+                    "Recommendation": recommendation,
+                    "Pit Probability": round(pit_probability, 1)
+                })
+            else:
+                st.error(response.text)
+        else:
+            st.info("Configure race conditions and run the simulation.")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown('<div class="section-title">Simulation History</div>', unsafe_allow_html=True)
+    if st.session_state.history:
+        st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True)
     else:
-        st.info("Run the simulator to generate ML prediction and AI race strategist explanation.")
+        st.info("No simulations executed yet.")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+
+with tab_analytics:
+    st.markdown('<div class="section-title">Telemetry Analytics</div>', unsafe_allow_html=True)
+
+    selected_driver = st.selectbox("Select Driver", drivers)
+
+    try:
+        driver_data = get_driver_data(selected_driver)
+
+        a1, a2, a3, a4 = st.columns(4)
+        a1.metric("Average Lap", f"{driver_data['average_lap_time']:.2f}s")
+        a2.metric("Fastest Lap", f"{driver_data['fastest_lap_time']:.2f}s")
+        a3.metric("Slowest Lap", f"{driver_data['slowest_lap_time']:.2f}s")
+        a4.metric("Total Stints", driver_data["stints"])
+
+        st.markdown("### Compounds Used")
+        st.write(", ".join(driver_data["compounds_used"]))
+
+    except Exception:
+        st.error("Could not load analytics.")
+
+    st.markdown('<div class="section-title">Driver Comparison</div>', unsafe_allow_html=True)
+
+    dcol1, dcol2 = st.columns(2)
+    driver_1 = dcol1.selectbox("Driver 1", drivers, index=0)
+    driver_2 = dcol2.selectbox("Driver 2", drivers, index=1 if len(drivers) > 1 else 0)
+
+    d1 = get_driver_data(driver_1)
+    d2 = get_driver_data(driver_2)
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.subheader(driver_1)
+        st.metric("Average Lap", f"{d1['average_lap_time']:.2f}s")
+        st.metric("Fastest Lap", f"{d1['fastest_lap_time']:.2f}s")
+        st.metric("Stints", d1["stints"])
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.subheader(driver_2)
+        st.metric("Average Lap", f"{d2['average_lap_time']:.2f}s")
+        st.metric("Fastest Lap", f"{d2['fastest_lap_time']:.2f}s")
+        st.metric("Stints", d2["stints"])
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+with tab_about:
+    st.markdown('<div class="section-title">About PitSense AI</div>', unsafe_allow_html=True)
+    st.markdown("""
+    PitSense AI is an AI-powered Formula 1 strategy platform designed to analyze
+    telemetry patterns and simulate pit stop decision-making.
+
+    The platform combines:
+    - FastF1 telemetry data
+    - Machine learning pit stop prediction
+    - FastAPI backend services
+    - Streamlit frontend
+    - Langflow orchestration
+    - Ollama local LLM explanations
+    - Docker-based deployment
+    """)
+
+
+with tab_docs:
+    st.markdown('<div class="section-title">System Documentation</div>', unsafe_allow_html=True)
+
+    st.code("""
+FastF1 Telemetry
+    ↓
+Data Processing
+    ↓
+ML Prediction Model
+    ↓
+FastAPI Backend
+    ↓
+Langflow Agent
+    ↓
+Ollama LLM
+    ↓
+Streamlit Website
+""")
+
+    st.markdown("""
+    ### Main API Endpoints
+
+    - `/predict`
+    - `/predict-with-explanation`
+    - `/predict-with-langflow-explanation`
+    - `/analytics/summary`
+    - `/analytics/drivers`
+    - `/analytics/driver/{driver}`
+    """)
 
 
 st.markdown("""
-<div class="section section-center">
-    <div class="section-kicker">BUILT FOR PERFORMANCE</div>
-    <div class="section-title">Powerful Features for Winning Strategies</div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div class="features-grid">
-    <div class="feature-card">
-        <div class="feature-icon">🧠</div>
-        <div class="feature-heading">AI Strategist</div>
-        <div class="feature-copy">
-            Langflow and Ollama generate professional race engineer style strategy explanations.
-        </div>
-    </div>
-    <div class="feature-card">
-        <div class="feature-icon">📈</div>
-        <div class="feature-heading">Telemetry Analytics</div>
-        <div class="feature-copy">
-            Analyze lap pace, tyre life, stint patterns, and race performance signals.
-        </div>
-    </div>
-    <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <div class="feature-heading">Real-Time Prediction</div>
-        <div class="feature-copy">
-            Machine learning predicts pit stop decisions from structured race conditions.
-        </div>
-    </div>
-    <div class="feature-card">
-        <div class="feature-icon">🛡️</div>
-        <div class="feature-heading">Race Intelligence</div>
-        <div class="feature-copy">
-            Support undercut, overcut, risk, and pit-window reasoning in one platform.
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-
-st.markdown("""
-<div class="section">
-    <div class="section-title">Simulation History</div>
-</div>
-""", unsafe_allow_html=True)
-
-if st.session_state.history:
-    st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True)
-else:
-    st.info("No simulations executed yet.")
-
-
-st.markdown("""
-<div class="footer">
-    PitSense AI — Formula 1 Strategy Intelligence Platform<br>
-    FastAPI • Streamlit • Langflow • Ollama • Scikit-learn • Docker
-</div>
+<hr>
+<p style="text-align:center; color:#64748b; font-size:13px;">
+PitSense AI — Formula 1 Strategy Intelligence Platform<br>
+FastAPI • Streamlit • Langflow • Ollama • Scikit-learn • Docker
+</p>
 """, unsafe_allow_html=True)
