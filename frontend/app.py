@@ -25,7 +25,7 @@ st.markdown("""
  
 .main-title {
 
-    font-size: 52px;
+    font-size: 54px;
 
     font-weight: 900;
 
@@ -33,7 +33,7 @@ st.markdown("""
 
     text-align: center;
 
-    letter-spacing: 2px;
+    letter-spacing: 3px;
 
 }
  
@@ -220,6 +220,10 @@ with col2:
 
                 result = response.json()
  
+                pit_probability = result["probability_pit"] * 100
+
+                stay_probability = result["probability_no_pit"] * 100
+ 
                 if result["pit_stop_next_lap"] == 1:
 
                     st.markdown(
@@ -244,23 +248,29 @@ with col2:
  
                 with m1:
 
-                    st.metric(
-
-                        "Pit Probability",
-
-                        f"{round(result['probability_pit'] * 100, 1)}%"
-
-                    )
+                    st.metric("Pit Probability", f"{pit_probability:.1f}%")
  
                 with m2:
 
-                    st.metric(
+                    st.metric("Stay Out Probability", f"{stay_probability:.1f}%")
+ 
+                st.subheader("Pit Strategy Confidence")
 
-                        "Stay Out Probability",
+                st.progress(int(pit_probability) / 100)
 
-                        f"{round(result['probability_no_pit'] * 100, 1)}%"
+                st.write(f"Pit Stop Confidence: **{pit_probability:.1f}%**")
+ 
+                if pit_probability >= 70:
 
-                    )
+                    st.warning("High pit stop risk detected.")
+
+                elif pit_probability >= 40:
+
+                    st.info("Moderate pit stop possibility.")
+
+                else:
+
+                    st.success("Low pit stop probability. Staying out is preferred.")
  
                 st.subheader("AI Strategy Explanation")
 
