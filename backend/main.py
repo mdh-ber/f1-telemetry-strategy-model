@@ -90,18 +90,44 @@ def predict_with_explanation(data: PredictionInput):
         prediction = model.predict(input_df)[0]
         probability = model.predict_proba(input_df)[0].tolist()
 
+        pit_probability = probability[1] * 100
+        stay_probability = probability[0] * 100
+
         if prediction == 1:
+            if pit_probability > 80:
+                strategy_type = "critical pit window"
+            elif pit_probability > 60:
+                strategy_type = "high-confidence pit strategy"
+            else:
+                strategy_type = "moderate pit probability"
+
             explanation = (
-                f"Pit stop is likely on the next lap for {data.Driver}. "
-                f"The model detected a stronger pit pattern using lap {data.LapNumber}, "
-                f"tyre age {data.TyreLife}, stint {data.Stint}, "
-                f"track position {data.Position}, and tyre compound {data.Compound}."
+                f"{data.Driver} is entering a {strategy_type}. "
+                f"The telemetry indicates increasing tyre degradation on the "
+                f"{data.Compound} compound after {int(data.TyreLife)} laps "
+                f"in the current stint. Track position P{int(data.Position)} "
+                f"and lap {int(data.LapNumber)} suggest that a pit stop could "
+                f"help optimize race pace and reduce lap-time loss. "
+                f"The AI strategy engine identifies the current race phase as "
+                f"a potential opportunity for an undercut or tyre reset strategy."
             )
+
         else:
+            if stay_probability > 80:
+                confidence_text = "high-confidence continuation strategy"
+            elif stay_probability > 60:
+                confidence_text = "stable race continuation phase"
+            else:
+                confidence_text = "low-confidence continuation phase"
+
             explanation = (
-                f"Pit stop is not likely on the next lap for {data.Driver}. "
-                f"The telemetry currently suggests a continuation strategy rather "
-                f"than an immediate pit window."
+                f"{data.Driver} is currently in a {confidence_text}. "
+                f"The telemetry does not yet indicate severe tyre degradation "
+                f"or immediate performance collapse on the {data.Compound} compound. "
+                f"With tyre life at {int(data.TyreLife)} laps and track position "
+                f"P{int(data.Position)}, the AI strategy engine recommends extending "
+                f"the current stint to maximize tyre usage and maintain track position "
+                f"efficiency."
             )
 
         return {
