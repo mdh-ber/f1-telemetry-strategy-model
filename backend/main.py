@@ -1,31 +1,16 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, validator
 import joblib
 import pandas as pd
 
 app = FastAPI(title="PitSense AI Backend")
 
-# ---------------------------------------------------
-# Load Model & Dataset
-# ---------------------------------------------------
 model = joblib.load("models/pitstop_prediction_model.pkl")
+telemetry_df = pd.read_csv("data/ml/monaco_2024_ml_dataset.csv")
 
-telemetry_df = pd.read_csv(
-    "data/ml/monaco_2024_ml_dataset.csv"
-)
-
-VALID_COMPOUNDS = [
-    "SOFT",
-    "MEDIUM",
-    "HARD",
-    "INTERMEDIATE",
-    "WET"
-]
+VALID_COMPOUNDS = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"]
 
 
-# ---------------------------------------------------
-# Prediction Input Schema
-# ---------------------------------------------------
 class PredictionInput(BaseModel):
     LapNumber: float
     TyreLife: float
@@ -34,76 +19,56 @@ class PredictionInput(BaseModel):
     Compound: str
     Driver: str
 
-    @field_validator("LapNumber")
+    @validator("LapNumber")
     def validate_lap(cls, value):
         if value < 1 or value > 100:
-            raise ValueError(
-                "LapNumber must be between 1 and 100"
-            )
+            raise ValueError("LapNumber must be between 1 and 100")
         return value
 
-    @field_validator("TyreLife")
+    @validator("TyreLife")
     def validate_tyre_life(cls, value):
         if value < 0 or value > 80:
-            raise ValueError(
-                "TyreLife must be between 0 and 80"
-            )
+            raise ValueError("TyreLife must be between 0 and 80")
         return value
 
-    @field_validator("Position")
+    @validator("Stint")
+    def validate_stint(cls, value):
+        if value < 1 or value > 10:
+            raise ValueError("Stint must be between 1 and 10")
+        return value
+
+    @validator("Position")
     def validate_position(cls, value):
         if value < 1 or value > 20:
-            raise ValueError(
-                "Position must be between 1 and 20"
-            )
+            raise ValueError("Position must be between 1 and 20")
         return value
 
-    @field_validator("Compound")
+    @validator("Compound")
     def validate_compound(cls, value):
         compound = value.upper()
-
         if compound not in VALID_COMPOUNDS:
-            raise ValueError(
-                f"Compound must be one of {VALID_COMPOUNDS}"
-            )
-
+            raise ValueError(f"Compound must be one of {VALID_COMPOUNDS}")
         return compound
 
-    @field_validator("Driver")
+    @validator("Driver")
     def validate_driver(cls, value):
-        if len(value.strip()) < 2:
-            raise ValueError(
-                "Driver code is too short"
-            )
-
-        return value.upper()
+        driver = value.upper().strip()
+        if len(driver) < 2:
+            raise ValueError("Driver code is too short")
+        return driver
 
 
-# ---------------------------------------------------
-# Root Endpoint
-# ---------------------------------------------------
 @app.get("/")
 def home():
-    return {
-        "message": "PitSense AI backend is running"
-    }
+    return {"message": "PitSense AI backend is running"}
 
 
-# ---------------------------------------------------
-# Basic Prediction Endpoint
-# ---------------------------------------------------
 @app.post("/predict")
 def predict_pitstop(data: PredictionInput):
-
     try:
-        input_df = pd.DataFrame([data.model_dump()])
-
+        input_df = pd.DataFrame([data.dict()])
         prediction = model.predict(input_df)[0]
-
-        probability = (
-            model.predict_proba(input_df)[0]
-            .tolist()
-        )
+        probability = model.predict_proba(input_df)[0].tolist()
 
         return {
             "pit_stop_next_lap": int(prediction),
@@ -118,44 +83,24 @@ def predict_pitstop(data: PredictionInput):
         )
 
 
-# ---------------------------------------------------
-# Prediction + Explanation Endpoint
-# ---------------------------------------------------
 @app.post("/predict-with-explanation")
-def predict_with_explanation(
-    data: PredictionInput
-):
-
+def predict_with_explanation(data: PredictionInput):
     try:
-        input_df = pd.DataFrame([data.model_dump()])
-
+        input_df = pd.DataFrame([data.dict()])
         prediction = model.predict(input_df)[0]
-
-        probability = (
-            model.predict_proba(input_df)[0]
-            .tolist()
-        )
+        probability = model.predict_proba(input_df)[0].tolist()
 
         if prediction == 1:
-
             explanation = (
-                f"Pit stop is likely on the next lap "
-                f"for {data.Driver}. "
-                f"The model detected a stronger pit "
-                f"pattern using lap {data.LapNumber}, "
-                f"tyre age {data.TyreLife}, "
-                f"stint {data.Stint}, "
-                f"track position {data.Position}, "
-                f"and tyre compound {data.Compound}."
+                f"Pit stop is likely on the next lap for {data.Driver}. "
+                f"The model detected a stronger pit pattern using lap {data.LapNumber}, "
+                f"tyre age {data.TyreLife}, stint {data.Stint}, "
+                f"track position {data.Position}, and tyre compound {data.Compound}."
             )
-
         else:
-
             explanation = (
-                f"Pit stop is not likely on the next "
-                f"lap for {data.Driver}. "
-                f"The telemetry currently suggests "
-                f"a continuation strategy rather "
+                f"Pit stop is not likely on the next lap for {data.Driver}. "
+                f"The telemetry currently suggests a continuation strategy rather "
                 f"than an immediate pit window."
             )
 
@@ -173,25 +118,14 @@ def predict_with_explanation(
         )
 
 
-# ---------------------------------------------------
-# Analytics Summary Endpoint
-# ---------------------------------------------------
 @app.get("/analytics/summary")
 def analytics_summary():
-
     try:
         return {
             "total_records": int(len(telemetry_df)),
-            "total_drivers": int(
-                telemetry_df["Driver"].nunique()
-            ),
-            "total_compounds": int(
-                telemetry_df["Compound"].nunique()
-            ),
-            "average_lap_time": float(
-                telemetry_df["LapTimeSeconds"]
-                .mean()
-            )
+            "total_drivers": int(telemetry_df["Driver"].nunique()),
+            "total_compounds": int(telemetry_df["Compound"].nunique()),
+            "average_lap_time": float(telemetry_df["LapTimeSeconds"].mean())
         }
 
     except Exception as e:
@@ -201,22 +135,11 @@ def analytics_summary():
         )
 
 
-# ---------------------------------------------------
-# Driver List Endpoint
-# ---------------------------------------------------
 @app.get("/analytics/drivers")
 def get_drivers():
-
     try:
-        drivers = sorted(
-            telemetry_df["Driver"]
-            .unique()
-            .tolist()
-        )
-
-        return {
-            "drivers": drivers
-        }
+        drivers = sorted(telemetry_df["Driver"].unique().tolist())
+        return {"drivers": drivers}
 
     except Exception as e:
         raise HTTPException(
@@ -225,12 +148,8 @@ def get_drivers():
         )
 
 
-# ---------------------------------------------------
-# Driver Analytics Endpoint
-# ---------------------------------------------------
 @app.get("/analytics/driver/{driver}")
 def driver_analytics(driver: str):
-
     try:
         driver_code = driver.upper()
 
@@ -246,30 +165,12 @@ def driver_analytics(driver: str):
 
         return {
             "driver": driver_code,
-            "average_lap_time": float(
-                driver_df["LapTimeSeconds"]
-                .mean()
-            ),
-            "fastest_lap_time": float(
-                driver_df["LapTimeSeconds"]
-                .min()
-            ),
-            "slowest_lap_time": float(
-                driver_df["LapTimeSeconds"]
-                .max()
-            ),
-            "total_laps": int(
-                len(driver_df)
-            ),
-            "stints": int(
-                driver_df["Stint"]
-                .nunique()
-            ),
-            "compounds_used": (
-                driver_df["Compound"]
-                .unique()
-                .tolist()
-            )
+            "average_lap_time": float(driver_df["LapTimeSeconds"].mean()),
+            "fastest_lap_time": float(driver_df["LapTimeSeconds"].min()),
+            "slowest_lap_time": float(driver_df["LapTimeSeconds"].max()),
+            "total_laps": int(len(driver_df)),
+            "stints": int(driver_df["Stint"].nunique()),
+            "compounds_used": driver_df["Compound"].unique().tolist()
         }
 
     except HTTPException:
@@ -282,22 +183,11 @@ def driver_analytics(driver: str):
         )
 
 
-# ---------------------------------------------------
-# Compound Usage Endpoint
-# ---------------------------------------------------
 @app.get("/analytics/compound-usage")
 def compound_usage():
-
     try:
-        compound_counts = (
-            telemetry_df["Compound"]
-            .value_counts()
-            .to_dict()
-        )
-
-        return {
-            "compound_usage": compound_counts
-        }
+        compound_counts = telemetry_df["Compound"].value_counts().to_dict()
+        return {"compound_usage": compound_counts}
 
     except Exception as e:
         raise HTTPException(
@@ -306,12 +196,8 @@ def compound_usage():
         )
 
 
-# ---------------------------------------------------
-# Pit Stop Lap Endpoint
-# ---------------------------------------------------
 @app.get("/analytics/pitstop-laps")
 def pitstop_laps():
-
     try:
         pit_df = telemetry_df[
             telemetry_df["PitStopNextLap"] == 1
@@ -328,9 +214,7 @@ def pitstop_laps():
             ]
         ].to_dict(orient="records")
 
-        return {
-            "pitstop_prediction_laps": records
-        }
+        return {"pitstop_prediction_laps": records}
 
     except Exception as e:
         raise HTTPException(
