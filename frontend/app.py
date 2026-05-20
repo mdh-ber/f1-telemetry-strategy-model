@@ -23,7 +23,11 @@ st.markdown("""
 
 .stApp {
 
-    background: linear-gradient(135deg, #050505 0%, #111827 45%, #1a0000 100%);
+    background:
+
+        radial-gradient(circle at top left, rgba(255, 30, 0, 0.25), transparent 35%),
+
+        linear-gradient(135deg, #020202 0%, #090909 45%, #180000 100%);
 
     color: white;
 
@@ -31,15 +35,17 @@ st.markdown("""
  
 .main-title {
 
-    font-size: 54px;
+    font-size: 60px;
 
-    font-weight: 900;
+    font-weight: 1000;
 
     color: #ff1e00;
 
     text-align: center;
 
-    letter-spacing: 3px;
+    letter-spacing: 4px;
+
+    text-shadow: 0 0 20px rgba(255,30,0,0.8);
 
 }
  
@@ -47,41 +53,59 @@ st.markdown("""
 
     text-align: center;
 
-    color: #d1d5db;
+    color: #e5e7eb;
 
-    font-size: 20px;
+    font-size: 21px;
 
     margin-bottom: 30px;
 
 }
  
+.race-banner {
+
+    background: linear-gradient(90deg, #ff1e00, #111, #ff1e00);
+
+    padding: 12px;
+
+    border-radius: 14px;
+
+    text-align: center;
+
+    font-weight: 800;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 25px;
+
+}
+ 
 .card {
 
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.06);
 
     padding: 25px;
 
-    border-radius: 18px;
+    border-radius: 20px;
 
-    border: 1px solid rgba(255, 30, 0, 0.5);
+    border: 1px solid rgba(255, 30, 0, 0.55);
 
-    box-shadow: 0 0 25px rgba(255, 30, 0, 0.25);
+    box-shadow: 0 0 30px rgba(255, 30, 0, 0.25);
 
 }
  
 .result-good {
 
-    background: linear-gradient(135deg, #003b1f, #006b3c);
+    background: linear-gradient(135deg, #003b1f, #008f4c);
 
-    padding: 25px;
+    padding: 24px;
 
     border-radius: 18px;
 
     border: 1px solid #00ff88;
 
-    font-size: 24px;
+    font-size: 25px;
 
-    font-weight: bold;
+    font-weight: 900;
 
     text-align: center;
 
@@ -89,17 +113,17 @@ st.markdown("""
  
 .result-bad {
 
-    background: linear-gradient(135deg, #4b0000, #b00000);
+    background: linear-gradient(135deg, #4b0000, #c90000);
 
-    padding: 25px;
+    padding: 24px;
 
     border-radius: 18px;
 
     border: 1px solid #ff3333;
 
-    font-size: 24px;
+    font-size: 25px;
 
-    font-weight: bold;
+    font-weight: 900;
 
     text-align: center;
 
@@ -107,13 +131,13 @@ st.markdown("""
  
 .explanation-box {
 
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.55);
 
     padding: 22px;
 
     border-radius: 16px;
 
-    border-left: 6px solid #ff1e00;
+    border-left: 7px solid #ff1e00;
 
     font-size: 17px;
 
@@ -121,23 +145,35 @@ st.markdown("""
 
 }
  
-.compare-box {
+[data-testid="stSidebar"] {
 
-    background: rgba(255,255,255,0.05);
+    background: #050505;
 
-    padding: 20px;
-
-    border-radius: 15px;
-
-    border: 1px solid #666;
+    border-right: 2px solid #ff1e00;
 
 }
  
-[data-testid="stSidebar"] {
+.stButton > button {
 
-    background: #080808;
+    background: linear-gradient(90deg, #ff1e00, #b00000);
 
-    border-right: 2px solid #ff1e00;
+    color: white;
+
+    border: none;
+
+    border-radius: 14px;
+
+    font-weight: 900;
+
+    height: 3.2rem;
+
+}
+ 
+.stButton > button:hover {
+
+    box-shadow: 0 0 25px rgba(255, 30, 0, 0.9);
+
+    color: white;
 
 }
 </style>
@@ -148,13 +184,17 @@ st.markdown('<div class="main-title">🏎️ PitSense AI</div>', unsafe_allow_ht
 
 st.markdown(
 
-    '<div class="subtitle">Formula 1 Pit Stop Strategy Prediction System</div>',
+    '<div class="subtitle">Formula 1 Pit Stop Strategy Prediction & Telemetry Intelligence Platform</div>',
 
     unsafe_allow_html=True
 
 )
+
+st.markdown('<div class="race-banner">RACE CONTROL • STRATEGY WALL • PIT WINDOW SIMULATOR</div>', unsafe_allow_html=True)
  
 st.sidebar.title("🏁 Race Control Panel")
+
+st.sidebar.markdown("Configure live strategy conditions")
  
 lap_number = st.sidebar.slider("Lap Number", 1, 100, 24)
 
@@ -174,14 +214,14 @@ compound = st.sidebar.selectbox(
  
 driver = st.sidebar.text_input("Driver Code", value="VER")
  
-col1, col2 = st.columns([1, 1.3])
+col1, col2 = st.columns([1, 1.35])
  
 with col1:
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
- 
-    st.subheader("Race Simulation Inputs")
- 
+
+    st.subheader("🏎️ Simulation Inputs")
+
     st.write(f"**Driver:** {driver}")
 
     st.write(f"**Current Lap:** {lap_number}")
@@ -193,17 +233,17 @@ with col1:
     st.write(f"**Track Position:** P{position}")
 
     st.write(f"**Compound:** {compound}")
- 
+
     st.markdown("</div>", unsafe_allow_html=True)
  
 with col2:
- 
+
     st.markdown('<div class="card">', unsafe_allow_html=True)
- 
-    st.subheader("Strategy Prediction")
+
+    st.subheader("🧠 Strategy Prediction Engine")
  
     if st.button("🚦 RUN PIT STRATEGY SIMULATION", use_container_width=True):
- 
+
         payload = {
 
             "LapNumber": lap_number,
@@ -233,7 +273,7 @@ with col2:
             )
  
             if response.status_code == 200:
- 
+
                 result = response.json()
  
                 pit_probability = result["probability_pit"] * 100
@@ -242,17 +282,19 @@ with col2:
  
                 if result["pit_stop_next_lap"] == 1:
 
+                    decision = "PIT"
+
                     st.markdown(
 
-                        '<div class="result-bad">⚠️ PIT STOP LIKELY NEXT LAP</div>',
+                        '<div class="result-bad">⚠️ BOX NOW — PIT STOP LIKELY NEXT LAP</div>',
 
                         unsafe_allow_html=True
 
                     )
 
-                    decision = "PIT"
-
                 else:
+
+                    decision = "STAY OUT"
 
                     st.markdown(
 
@@ -261,8 +303,6 @@ with col2:
                         unsafe_allow_html=True
 
                     )
-
-                    decision = "STAY OUT"
  
                 m1, m2 = st.columns(2)
  
@@ -274,24 +314,24 @@ with col2:
 
                     st.metric("Stay Out Probability", f"{stay_probability:.1f}%")
  
-                st.subheader("Pit Strategy Confidence")
- 
+                st.subheader("📊 Pit Strategy Confidence")
+
                 st.progress(int(pit_probability) / 100)
  
                 if pit_probability >= 70:
 
-                    st.warning("High pit stop risk detected.")
+                    st.warning("High pit stop risk detected. Strategy wall should prepare for boxing.")
 
                 elif pit_probability >= 40:
 
-                    st.info("Moderate pit stop possibility.")
+                    st.info("Moderate pit stop possibility. Monitor tyre degradation and traffic.")
 
                 else:
 
-                    st.success("Low pit stop probability.")
+                    st.success("Low pit stop probability. Staying out is currently preferred.")
  
-                st.subheader("AI Strategy Explanation")
- 
+                st.subheader("🤖 AI Strategy Explanation")
+
                 st.markdown(
 
                     f'<div class="explanation-box">{result["explanation"]}</div>',
@@ -300,9 +340,7 @@ with col2:
 
                 )
  
-                st.subheader("Historical vs Predicted Strategy")
- 
-                compare_df = pd.DataFrame({
+                comparison_df = pd.DataFrame({
 
                     "Parameter": [
 
@@ -316,11 +354,13 @@ with col2:
 
                         "Track Position",
 
-                        "Prediction"
+                        "Prediction",
+
+                        "Pit Probability"
 
                     ],
 
-                    "Current Simulation": [
+                    "Simulation Result": [
 
                         driver,
 
@@ -332,13 +372,17 @@ with col2:
 
                         position,
 
-                        decision
+                        decision,
+
+                        f"{pit_probability:.1f}%"
 
                     ]
 
                 })
  
-                st.dataframe(compare_df, use_container_width=True)
+                st.subheader("⚔️ Historical vs Predicted Strategy")
+
+                st.dataframe(comparison_df, use_container_width=True)
  
                 st.session_state.history.append({
 
@@ -354,7 +398,9 @@ with col2:
 
                     "Prediction": decision,
 
-                    "PitProbability": round(pit_probability, 1)
+                    "PitProbability": round(pit_probability, 1),
+
+                    "StayOutProbability": round(stay_probability, 1)
 
                 })
  
@@ -370,7 +416,7 @@ with col2:
  
 st.divider()
  
-st.subheader("📊 Prediction History")
+st.subheader("📜 Strategy Simulation History")
  
 if st.session_state.history:
 
@@ -381,4 +427,72 @@ if st.session_state.history:
 else:
 
     st.info("No simulations executed yet.")
+ 
+st.divider()
+ 
+st.subheader("📈 Telemetry Analytics Dashboard")
+ 
+try:
+
+    telemetry_df = pd.read_csv("data/ml/monaco_2024_ml_dataset.csv")
+ 
+    analytics_col1, analytics_col2 = st.columns(2)
+ 
+    with analytics_col1:
+
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+
+        st.subheader("Driver Lap Pace Analysis")
+ 
+        selected_driver = st.selectbox(
+
+            "Select Driver",
+
+            sorted(telemetry_df["Driver"].unique())
+
+        )
+ 
+        driver_df = telemetry_df[telemetry_df["Driver"] == selected_driver]
+ 
+        lap_chart_df = driver_df[["LapNumber", "LapTimeSeconds"]].set_index("LapNumber")
+
+        st.line_chart(lap_chart_df)
+ 
+        st.markdown("</div>", unsafe_allow_html=True)
+ 
+    with analytics_col2:
+
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+
+        st.subheader("Tyre Compound Usage")
+ 
+        compound_counts = telemetry_df["Compound"].value_counts()
+
+        st.bar_chart(compound_counts)
+ 
+        st.markdown("</div>", unsafe_allow_html=True)
+ 
+    st.divider()
+ 
+    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+ 
+    with metric_col1:
+
+        st.metric("Total Laps", len(telemetry_df))
+ 
+    with metric_col2:
+
+        st.metric("Drivers", telemetry_df["Driver"].nunique())
+ 
+    with metric_col3:
+
+        st.metric("Compounds", telemetry_df["Compound"].nunique())
+ 
+    with metric_col4:
+
+        st.metric("Avg Lap Time", f"{telemetry_df['LapTimeSeconds'].mean():.2f}s")
+ 
+except FileNotFoundError:
+
+    st.warning("Telemetry dataset not found. Run the ML dataset creation script first.")
  
