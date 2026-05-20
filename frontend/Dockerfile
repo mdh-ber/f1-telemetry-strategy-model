@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "frontend/app.py", "--server.port", "8501", "--server. Address", "0.0.0.0"]
+CMD ["streamlit", "run", "frontend/app.py"]
