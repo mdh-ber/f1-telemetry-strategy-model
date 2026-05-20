@@ -114,6 +114,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# -----------------------------
+# Sidebar Prediction Inputs
+# -----------------------------
 st.sidebar.title("🏁 Race Control Panel")
 
 lap_number = st.sidebar.slider("Lap Number", 1, 100, 24)
@@ -128,13 +131,15 @@ compound = st.sidebar.selectbox(
 
 driver = st.sidebar.text_input("Driver Code", value="VER")
 
+# -----------------------------
+# Prediction Section
+# -----------------------------
 col1, col2 = st.columns([1, 1.35])
 
 with col1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
     st.subheader("🏎️ Simulation Inputs")
-
     st.write(f"**Driver:** {driver}")
     st.write(f"**Current Lap:** {lap_number}")
     st.write(f"**Tyre Life:** {tyre_life} laps")
@@ -145,13 +150,11 @@ with col1:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col2:
-
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
     st.subheader("🧠 Strategy Prediction Engine")
 
     if st.button("🚦 RUN PIT STRATEGY SIMULATION", use_container_width=True):
-
         payload = {
             "LapNumber": lap_number,
             "TyreLife": tyre_life,
@@ -169,7 +172,6 @@ with col2:
             )
 
             if response.status_code == 200:
-
                 result = response.json()
 
                 pit_probability = result["probability_pit"] * 100
@@ -200,7 +202,6 @@ with col2:
                 st.progress(int(pit_probability) / 100)
 
                 st.subheader("🤖 AI Strategy Explanation")
-
                 st.markdown(
                     f'<div class="explanation-box">{result["explanation"]}</div>',
                     unsafe_allow_html=True
@@ -224,6 +225,9 @@ with col2:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+# -----------------------------
+# History Section
+# -----------------------------
 st.divider()
 
 st.subheader("📜 Strategy Simulation History")
@@ -231,48 +235,119 @@ st.subheader("📜 Strategy Simulation History")
 if st.session_state.history:
     history_df = pd.DataFrame(st.session_state.history)
     st.dataframe(history_df, use_container_width=True)
+else:
+    st.info("No simulations executed yet.")
 
+# -----------------------------
+# Load Telemetry Dataset
+# -----------------------------
 st.divider()
 
 st.subheader("📈 Telemetry Analytics Dashboard")
 
-telemetry_df = pd.read_csv("data/ml/monaco_2024_ml_dataset.csv")
+try:
+    telemetry_df = pd.read_csv("data/ml/monaco_2024_ml_dataset.csv")
+except FileNotFoundError:
+    st.warning("Telemetry dataset not found. Run the ML dataset creation script first.")
+    st.stop()
 
+# -----------------------------
+# Dynamic Telemetry Filters
+# -----------------------------
+st.markdown('<div class="card">', unsafe_allow_html=True)
+
+st.subheader("🎛️ Dynamic Telemetry Filters")
+
+filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
+
+available_drivers = sorted(telemetry_df["Driver"].unique())
+available_compounds = sorted(telemetry_df["Compound"].unique())
+available_stints = sorted(telemetry_df["Stint"].unique())
+
+with filter_col1:
+    selected_drivers = st.multiselect(
+        "Drivers",
+        available_drivers,
+        default=available_drivers[:3]
+    )
+
+with filter_col2:
+    selected_compounds = st.multiselect(
+        "Tyre Compounds",
+        available_compounds,
+        default=available_compounds
+    )
+
+with filter_col3:
+    selected_stints = st.multiselect(
+        "Stints",
+        available_stints,
+        default=available_stints
+    )
+
+with filter_col4:
+    min_lap = int(telemetry_df["LapNumber"].min())
+    max_lap = int(telemetry_df["LapNumber"].max())
+
+    selected_lap_range = st.slider(
+        "Lap Range",
+        min_lap,
+        max_lap,
+        (min_lap, max_lap)
+    )
+
+filtered_df = telemetry_df[
+    (telemetry_df["Driver"].isin(selected_drivers)) &
+    (telemetry_df["Compound"].isin(selected_compounds)) &
+    (telemetry_df["Stint"].isin(selected_stints)) &
+    (telemetry_df["LapNumber"] >= selected_lap_range[0]) &
+    (telemetry_df["LapNumber"] <= selected_lap_range[1])
+]
+
+st.write(f"Filtered telemetry records: **{len(filtered_df)}**")
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------
+# Filtered Analytics Charts
+# -----------------------------
 analytics_col1, analytics_col2 = st.columns(2)
 
 with analytics_col1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.subheader("Driver Lap Pace Analysis")
+    st.subheader("Filtered Lap Pace Analysis")
 
-    selected_driver = st.selectbox(
-        "Select Driver",
-        sorted(telemetry_df["Driver"].unique())
-    )
+    if not filtered_df.empty:
+        pace_chart_df = filtered_df.pivot_table(
+            index="LapNumber",
+            columns="Driver",
+            values="LapTimeSeconds",
+            aggfunc="mean"
+        )
 
-    driver_df = telemetry_df[
-        telemetry_df["Driver"] == selected_driver
-    ]
-
-    lap_chart_df = driver_df[
-        ["LapNumber", "LapTimeSeconds"]
-    ].set_index("LapNumber")
-
-    st.line_chart(lap_chart_df)
+        st.line_chart(pace_chart_df)
+    else:
+        st.warning("No data available for selected filters.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 with analytics_col2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.subheader("Tyre Compound Usage")
+    st.subheader("Filtered Tyre Compound Usage")
 
-    compound_counts = telemetry_df["Compound"].value_counts()
-
-    st.bar_chart(compound_counts)
+    if not filtered_df.empty:
+        compound_counts = filtered_df["Compound"].value_counts()
+        st.bar_chart(compound_counts)
+    else:
+        st.warning("No compound data available.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+# -----------------------------
+# Driver Strategy Comparison
+# -----------------------------
 st.divider()
 
 st.subheader("⚔️ Driver Strategy Comparison")
@@ -281,14 +356,14 @@ compare_col1, compare_col2 = st.columns(2)
 
 driver_1 = compare_col1.selectbox(
     "Select Driver 1",
-    sorted(telemetry_df["Driver"].unique()),
+    available_drivers,
     index=0
 )
 
 driver_2 = compare_col2.selectbox(
     "Select Driver 2",
-    sorted(telemetry_df["Driver"].unique()),
-    index=1
+    available_drivers,
+    index=1 if len(available_drivers) > 1 else 0
 )
 
 driver1_df = telemetry_df[telemetry_df["Driver"] == driver_1]
@@ -301,16 +376,54 @@ comparison_chart = pd.DataFrame({
 
 st.line_chart(comparison_chart)
 
-metric_col1, metric_col2 = st.columns(2)
+metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
 
 with metric_col1:
     st.metric(
-        f"{driver_1} Avg Lap Time",
+        f"{driver_1} Avg Lap",
         f"{driver1_df['LapTimeSeconds'].mean():.2f}s"
     )
 
 with metric_col2:
     st.metric(
-        f"{driver_2} Avg Lap Time",
+        f"{driver_2} Avg Lap",
         f"{driver2_df['LapTimeSeconds'].mean():.2f}s"
     )
+
+with metric_col3:
+    st.metric(
+        f"{driver_1} Stints",
+        int(driver1_df["Stint"].nunique())
+    )
+
+with metric_col4:
+    st.metric(
+        f"{driver_2} Stints",
+        int(driver2_df["Stint"].nunique())
+    )
+
+# -----------------------------
+# Filtered Dataset Preview
+# -----------------------------
+st.divider()
+
+st.subheader("🧾 Filtered Telemetry Data Preview")
+
+if not filtered_df.empty:
+    st.dataframe(
+        filtered_df[
+            [
+                "Driver",
+                "LapNumber",
+                "LapTimeSeconds",
+                "Compound",
+                "TyreLife",
+                "Stint",
+                "Position",
+                "PitStopNextLap"
+            ]
+        ],
+        use_container_width=True
+    )
+else:
+    st.info("No filtered data to preview.")
