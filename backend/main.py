@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, validator
 import joblib
 import pandas as pd
+import requests
+import uuid
 
 app = FastAPI(title="PitSense AI Backend")
 
@@ -9,6 +11,12 @@ model = joblib.load("models/pitstop_prediction_model.pkl")
 telemetry_df = pd.read_csv("data/ml/monaco_2024_ml_dataset.csv")
 
 VALID_COMPOUNDS = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"]
+
+LANGFLOW_URL = (
+    "http://host.docker.internal:7861/"
+    "api/v1/run/"
+    "f4f76f49-e8bc-4d9c-ba22-028a4a417207"
+)
 
 
 class PredictionInput(BaseModel):
@@ -73,7 +81,7 @@ def predict_pitstop(data: PredictionInput):
         return {
             "pit_stop_next_lap": int(prediction),
             "probability_no_pit": probability[0],
-            "probability_pit": probability[1]
+            "probability_pit": probability[1],
         }
 
     except Exception as e:
@@ -134,13 +142,67 @@ def predict_with_explanation(data: PredictionInput):
             "pit_stop_next_lap": int(prediction),
             "probability_no_pit": probability[0],
             "probability_pit": probability[1],
-            "explanation": explanation
+            "explanation": explanation,
         }
 
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Prediction explanation failed: {str(e)}"
+        )
+
+
+@app.post("/predict-with-langflow-explanation")
+def predict_with_langflow(data: PredictionInput):
+    try:
+        input_df = pd.DataFrame([data.dict()])
+        prediction = model.predict(input_df)[0]
+        probability = model.predict_proba(input_df)[0].tolist()
+
+        pit_probability = round(probability[1] * 100, 1)
+
+        telemetry_prompt = f"""
+Driver: {data.Driver}
+Lap: {data.LapNumber}
+Tyre Life: {data.TyreLife}
+Compound: {data.Compound}
+Position: {data.Position}
+Pit Stop Probability: {pit_probability}%
+"""
+
+        payload = {
+            "output_type": "chat",
+            "input_type": "chat",
+            "input_value": telemetry_prompt,
+            "session_id": str(uuid.uuid4()),
+        }
+
+        response = requests.post(
+            LANGFLOW_URL,
+            json=payload,
+            timeout=120
+        )
+
+        response.raise_for_status()
+        langflow_response = response.json()
+
+        ai_explanation = (
+            langflow_response["outputs"][0]
+            ["outputs"][0]
+            ["results"]["message"]["text"]
+        )
+
+        return {
+            "pit_stop_next_lap": int(prediction),
+            "probability_no_pit": probability[0],
+            "probability_pit": probability[1],
+            "ai_explanation": ai_explanation,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Langflow AI explanation failed: {str(e)}"
         )
 
 
@@ -151,7 +213,7 @@ def analytics_summary():
             "total_records": int(len(telemetry_df)),
             "total_drivers": int(telemetry_df["Driver"].nunique()),
             "total_compounds": int(telemetry_df["Compound"].nunique()),
-            "average_lap_time": float(telemetry_df["LapTimeSeconds"].mean())
+            "average_lap_time": float(telemetry_df["LapTimeSeconds"].mean()),
         }
 
     except Exception as e:
@@ -196,7 +258,7 @@ def driver_analytics(driver: str):
             "slowest_lap_time": float(driver_df["LapTimeSeconds"].max()),
             "total_laps": int(len(driver_df)),
             "stints": int(driver_df["Stint"].nunique()),
-            "compounds_used": driver_df["Compound"].unique().tolist()
+            "compounds_used": driver_df["Compound"].unique().tolist(),
         }
 
     except HTTPException:
@@ -236,7 +298,7 @@ def pitstop_laps():
                 "Compound",
                 "TyreLife",
                 "Stint",
-                "Position"
+                "Position",
             ]
         ].to_dict(orient="records")
 
