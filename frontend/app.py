@@ -12,19 +12,141 @@ st.set_page_config(
 
 )
  
-st.title("🏎️ PitSense AI")
+st.markdown("""
+<style>
 
-st.markdown("### F1 Pit Stop Strategy Prediction Dashboard")
+.stApp {
+
+    background: linear-gradient(135deg, #050505 0%, #111827 45%, #1a0000 100%);
+
+    color: white;
+
+}
  
-st.sidebar.header("Race Simulation Inputs")
+.main-title {
+
+    font-size: 52px;
+
+    font-weight: 900;
+
+    color: #ff1e00;
+
+    text-align: center;
+
+    letter-spacing: 2px;
+
+}
  
-lap_number = st.sidebar.number_input("Lap Number", min_value=1, max_value=100, value=24)
+.subtitle {
 
-tyre_life = st.sidebar.number_input("Tyre Life", min_value=1, max_value=80, value=18)
+    text-align: center;
 
-stint = st.sidebar.number_input("Stint", min_value=1, max_value=10, value=1)
+    color: #d1d5db;
 
-position = st.sidebar.number_input("Track Position", min_value=1, max_value=20, value=3)
+    font-size: 20px;
+
+    margin-bottom: 30px;
+
+}
+ 
+.card {
+
+    background: rgba(255, 255, 255, 0.07);
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    border: 1px solid rgba(255, 30, 0, 0.5);
+
+    box-shadow: 0 0 25px rgba(255, 30, 0, 0.25);
+
+}
+ 
+.result-good {
+
+    background: linear-gradient(135deg, #003b1f, #006b3c);
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    border: 1px solid #00ff88;
+
+    font-size: 24px;
+
+    font-weight: bold;
+
+    text-align: center;
+
+}
+ 
+.result-bad {
+
+    background: linear-gradient(135deg, #4b0000, #b00000);
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    border: 1px solid #ff3333;
+
+    font-size: 24px;
+
+    font-weight: bold;
+
+    text-align: center;
+
+}
+ 
+.explanation-box {
+
+    background: rgba(0, 0, 0, 0.45);
+
+    padding: 22px;
+
+    border-radius: 16px;
+
+    border-left: 6px solid #ff1e00;
+
+    font-size: 17px;
+
+    line-height: 1.6;
+
+}
+ 
+[data-testid="stSidebar"] {
+
+    background: #080808;
+
+    border-right: 2px solid #ff1e00;
+
+}
+</style>
+
+""", unsafe_allow_html=True)
+ 
+st.markdown('<div class="main-title">🏎️ PitSense AI</div>', unsafe_allow_html=True)
+
+st.markdown(
+
+    '<div class="subtitle">Formula 1 Pit Stop Strategy Prediction System</div>',
+
+    unsafe_allow_html=True
+
+)
+ 
+st.sidebar.title("🏁 Race Control Panel")
+
+st.sidebar.markdown("Configure race conditions")
+ 
+lap_number = st.sidebar.slider("Lap Number", 1, 100, 24)
+
+tyre_life = st.sidebar.slider("Tyre Life", 1, 80, 18)
+
+stint = st.sidebar.slider("Stint", 1, 10, 1)
+
+position = st.sidebar.slider("Track Position", 1, 20, 3)
  
 compound = st.sidebar.selectbox(
 
@@ -36,31 +158,35 @@ compound = st.sidebar.selectbox(
  
 driver = st.sidebar.text_input("Driver Code", value="VER")
  
-st.divider()
- 
-col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns([1, 1.3])
  
 with col1:
 
-    st.subheader("Simulation Summary")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    st.subheader("Race Simulation")
 
     st.write(f"**Driver:** {driver}")
 
-    st.write(f"**Lap Number:** {lap_number}")
+    st.write(f"**Current Lap:** {lap_number}")
 
-    st.write(f"**Tyre Life:** {tyre_life}")
+    st.write(f"**Tyre Life:** {tyre_life} laps")
 
-    st.write(f"**Stint:** {stint}")
+    st.write(f"**Current Stint:** {stint}")
 
-    st.write(f"**Track Position:** {position}")
+    st.write(f"**Track Position:** P{position}")
 
-    st.write(f"**Tyre Compound:** {compound}")
+    st.write(f"**Compound:** {compound}")
+
+    st.markdown("</div>", unsafe_allow_html=True)
  
 with col2:
 
-    st.subheader("Prediction Result")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    st.subheader("Strategy Prediction")
  
-    if st.button("Predict Pit Stop", use_container_width=True):
+    if st.button("🚦 RUN PIT STRATEGY SIMULATION", use_container_width=True):
 
         payload = {
 
@@ -96,37 +222,55 @@ with col2:
  
                 if result["pit_stop_next_lap"] == 1:
 
-                    st.error("Pit Stop Likely Next Lap")
+                    st.markdown(
+
+                        '<div class="result-bad">⚠️ PIT STOP LIKELY NEXT LAP</div>',
+
+                        unsafe_allow_html=True
+
+                    )
 
                 else:
 
-                    st.success("No Immediate Pit Stop Expected")
- 
-                metric1, metric2 = st.columns(2)
- 
-                with metric1:
+                    st.markdown(
 
-                    st.metric(
+                        '<div class="result-good">✅ STAY OUT — NO IMMEDIATE PIT STOP</div>',
 
-                        "Pit Stop Probability",
-
-                        round(result["probability_pit"], 3)
+                        unsafe_allow_html=True
 
                     )
  
-                with metric2:
+                m1, m2 = st.columns(2)
+ 
+                with m1:
 
                     st.metric(
 
-                        "No Pit Probability",
+                        "Pit Probability",
 
-                        round(result["probability_no_pit"], 3)
+                        f"{round(result['probability_pit'] * 100, 1)}%"
 
                     )
  
-                st.subheader("Strategy Explanation")
+                with m2:
 
-                st.info(result["explanation"])
+                    st.metric(
+
+                        "Stay Out Probability",
+
+                        f"{round(result['probability_no_pit'] * 100, 1)}%"
+
+                    )
+ 
+                st.subheader("AI Strategy Explanation")
+
+                st.markdown(
+
+                    f'<div class="explanation-box">{result["explanation"]}</div>',
+
+                    unsafe_allow_html=True
+
+                )
  
             else:
 
@@ -135,4 +279,6 @@ with col2:
         except requests.exceptions.RequestException:
 
             st.error("Could not connect to backend API")
+ 
+    st.markdown("</div>", unsafe_allow_html=True)
  
