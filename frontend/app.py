@@ -1,6 +1,8 @@
 import streamlit as st
 
 import requests
+
+import pandas as pd
  
 st.set_page_config(
 
@@ -11,6 +13,10 @@ st.set_page_config(
     layout="wide"
 
 )
+ 
+if "history" not in st.session_state:
+
+    st.session_state.history = []
  
 st.markdown("""
 <style>
@@ -115,6 +121,18 @@ st.markdown("""
 
 }
  
+.compare-box {
+
+    background: rgba(255,255,255,0.05);
+
+    padding: 20px;
+
+    border-radius: 15px;
+
+    border: 1px solid #666;
+
+}
+ 
 [data-testid="stSidebar"] {
 
     background: #080808;
@@ -137,8 +155,6 @@ st.markdown(
 )
  
 st.sidebar.title("🏁 Race Control Panel")
-
-st.sidebar.markdown("Configure race conditions")
  
 lap_number = st.sidebar.slider("Lap Number", 1, 100, 24)
 
@@ -163,9 +179,9 @@ col1, col2 = st.columns([1, 1.3])
 with col1:
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
-    st.subheader("Race Simulation")
-
+ 
+    st.subheader("Race Simulation Inputs")
+ 
     st.write(f"**Driver:** {driver}")
 
     st.write(f"**Current Lap:** {lap_number}")
@@ -177,17 +193,17 @@ with col1:
     st.write(f"**Track Position:** P{position}")
 
     st.write(f"**Compound:** {compound}")
-
+ 
     st.markdown("</div>", unsafe_allow_html=True)
  
 with col2:
-
+ 
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
+ 
     st.subheader("Strategy Prediction")
  
     if st.button("🚦 RUN PIT STRATEGY SIMULATION", use_container_width=True):
-
+ 
         payload = {
 
             "LapNumber": lap_number,
@@ -217,7 +233,7 @@ with col2:
             )
  
             if response.status_code == 200:
-
+ 
                 result = response.json()
  
                 pit_probability = result["probability_pit"] * 100
@@ -234,6 +250,8 @@ with col2:
 
                     )
 
+                    decision = "PIT"
+
                 else:
 
                     st.markdown(
@@ -243,6 +261,8 @@ with col2:
                         unsafe_allow_html=True
 
                     )
+
+                    decision = "STAY OUT"
  
                 m1, m2 = st.columns(2)
  
@@ -255,10 +275,8 @@ with col2:
                     st.metric("Stay Out Probability", f"{stay_probability:.1f}%")
  
                 st.subheader("Pit Strategy Confidence")
-
+ 
                 st.progress(int(pit_probability) / 100)
-
-                st.write(f"Pit Stop Confidence: **{pit_probability:.1f}%**")
  
                 if pit_probability >= 70:
 
@@ -270,10 +288,10 @@ with col2:
 
                 else:
 
-                    st.success("Low pit stop probability. Staying out is preferred.")
+                    st.success("Low pit stop probability.")
  
                 st.subheader("AI Strategy Explanation")
-
+ 
                 st.markdown(
 
                     f'<div class="explanation-box">{result["explanation"]}</div>',
@@ -281,6 +299,64 @@ with col2:
                     unsafe_allow_html=True
 
                 )
+ 
+                st.subheader("Historical vs Predicted Strategy")
+ 
+                compare_df = pd.DataFrame({
+
+                    "Parameter": [
+
+                        "Driver",
+
+                        "Lap",
+
+                        "Tyre Life",
+
+                        "Compound",
+
+                        "Track Position",
+
+                        "Prediction"
+
+                    ],
+
+                    "Current Simulation": [
+
+                        driver,
+
+                        lap_number,
+
+                        tyre_life,
+
+                        compound,
+
+                        position,
+
+                        decision
+
+                    ]
+
+                })
+ 
+                st.dataframe(compare_df, use_container_width=True)
+ 
+                st.session_state.history.append({
+
+                    "Driver": driver,
+
+                    "Lap": lap_number,
+
+                    "TyreLife": tyre_life,
+
+                    "Compound": compound,
+
+                    "Position": position,
+
+                    "Prediction": decision,
+
+                    "PitProbability": round(pit_probability, 1)
+
+                })
  
             else:
 
@@ -291,4 +367,18 @@ with col2:
             st.error("Could not connect to backend API")
  
     st.markdown("</div>", unsafe_allow_html=True)
+ 
+st.divider()
+ 
+st.subheader("📊 Prediction History")
+ 
+if st.session_state.history:
+
+    history_df = pd.DataFrame(st.session_state.history)
+
+    st.dataframe(history_df, use_container_width=True)
+
+else:
+
+    st.info("No simulations executed yet.")
  
