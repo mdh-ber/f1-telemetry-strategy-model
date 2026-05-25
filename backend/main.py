@@ -1,9 +1,24 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, validator
+from pathlib import Path
 import joblib
 import pandas as pd
 import requests
 import uuid
+import os
+
+
+def load_local_env():
+    env_path = Path(".env")
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                os.environ.setdefault(key.strip(), value.strip())
+
+
+load_local_env()
 
 app = FastAPI(title="PitSense AI Backend")
 
@@ -12,13 +27,19 @@ telemetry_df = pd.read_csv("data/ml/monaco_2024_ml_dataset.csv")
 
 VALID_COMPOUNDS = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"]
 
-LANGFLOW_URL = (
-    "http://host.docker.internal:7861/"
-    "api/v1/run/"
-    "f4f76f49-e8bc-4d9c-ba22-028a4a417207"
-)
+LANGFLOW_BASE_URL = os.getenv("LANGFLOW_BASE_URL")
+LANGFLOW_FLOW_ID = os.getenv("LANGFLOW_FLOW_ID")
+LANGFLOW_API_KEY = os.getenv("LANGFLOW_API_KEY")
 
-LANGFLOW_API_KEY = "sk-mxeoH9N4J_TNb89cSWz3_3Cw_4vTm_23p4-JB0eHEMo"
+
+def get_langflow_url():
+    if not LANGFLOW_BASE_URL or not LANGFLOW_FLOW_ID:
+        raise HTTPException(
+            status_code=500,
+            detail="Langflow configuration missing. Check LANGFLOW_BASE_URL and LANGFLOW_FLOW_ID in .env"
+        )
+
+    return f"{LANGFLOW_BASE_URL.rstrip('/')}/api/v1/run/{LANGFLOW_FLOW_ID}"
 
 
 class PredictionInput(BaseModel):
@@ -56,44 +77,29 @@ class PredictionInput(BaseModel):
     @validator("Compound")
     def validate_compound(cls, value):
         compound = value.upper()
-
         if compound not in VALID_COMPOUNDS:
-            raise ValueError(
-                f"Compound must be one of {VALID_COMPOUNDS}"
-            )
-
+            raise ValueError(f"Compound must be one of {VALID_COMPOUNDS}")
         return compound
 
     @validator("Driver")
     def validate_driver(cls, value):
         driver = value.upper().strip()
-
         if len(driver) < 2:
             raise ValueError("Driver code is too short")
-
         return driver
 
 
 @app.get("/")
 def home():
-    return {
-        "message": "PitSense AI backend is running"
-    }
+    return {"message": "PitSense AI backend is running"}
 
 
 @app.post("/predict")
 def predict_pitstop(data: PredictionInput):
-
     try:
-
         input_df = pd.DataFrame([data.dict()])
-
         prediction = model.predict(input_df)[0]
-
-        probability = (
-            model.predict_proba(input_df)[0]
-            .tolist()
-        )
+        probability = model.predict_proba(input_df)[0].tolist()
 
         return {
             "pit_stop_next_lap": int(prediction),
@@ -102,7 +108,6 @@ def predict_pitstop(data: PredictionInput):
         }
 
     except Exception as e:
-
         raise HTTPException(
             status_code=500,
             detail=f"Prediction failed: {str(e)}"
@@ -111,79 +116,48 @@ def predict_pitstop(data: PredictionInput):
 
 @app.post("/predict-with-explanation")
 def predict_with_explanation(data: PredictionInput):
-
     try:
-
         input_df = pd.DataFrame([data.dict()])
-
         prediction = model.predict(input_df)[0]
-
-        probability = (
-            model.predict_proba(input_df)[0]
-            .tolist()
-        )
+        probability = model.predict_proba(input_df)[0].tolist()
 
         pit_probability = probability[1] * 100
         stay_probability = probability[0] * 100
 
         if prediction == 1:
-
             if pit_probability > 80:
                 strategy_type = "critical pit window"
-
             elif pit_probability > 60:
                 strategy_type = "high-confidence pit strategy"
-
             else:
                 strategy_type = "moderate pit probability"
 
             explanation = (
-                f"{data.Driver} is entering a "
-                f"{strategy_type}. "
-                f"The telemetry indicates increasing tyre "
-                f"degradation on the {data.Compound} compound "
-                f"after {int(data.TyreLife)} laps in the "
-                f"current stint. Track position "
-                f"P{int(data.Position)} and lap "
-                f"{int(data.LapNumber)} suggest that a pit "
-                f"stop could help optimize race pace and "
-                f"reduce lap-time loss. "
-                f"The AI strategy engine identifies the "
-                f"current race phase as a potential "
-                f"opportunity for an undercut or tyre reset "
-                f"strategy."
+                f"{data.Driver} is entering a {strategy_type}. "
+                f"The telemetry indicates increasing tyre degradation on the "
+                f"{data.Compound} compound after {int(data.TyreLife)} laps in the "
+                f"current stint. Track position P{int(data.Position)} and lap "
+                f"{int(data.LapNumber)} suggest that a pit stop could help optimize "
+                f"race pace and reduce lap-time loss. The AI strategy engine identifies "
+                f"the current race phase as a potential opportunity for an undercut or "
+                f"tyre reset strategy."
             )
 
         else:
-
             if stay_probability > 80:
-                confidence_text = (
-                    "high-confidence continuation strategy"
-                )
-
+                confidence_text = "high-confidence continuation strategy"
             elif stay_probability > 60:
-                confidence_text = (
-                    "stable race continuation phase"
-                )
-
+                confidence_text = "stable race continuation phase"
             else:
-                confidence_text = (
-                    "low-confidence continuation phase"
-                )
+                confidence_text = "low-confidence continuation phase"
 
             explanation = (
-                f"{data.Driver} is currently in a "
-                f"{confidence_text}. "
-                f"The telemetry does not yet indicate "
-                f"severe tyre degradation or immediate "
-                f"performance collapse on the "
-                f"{data.Compound} compound. "
-                f"With tyre life at "
-                f"{int(data.TyreLife)} laps and track "
-                f"position P{int(data.Position)}, the AI "
-                f"strategy engine recommends extending "
-                f"the current stint to maximize tyre "
-                f"usage and maintain track position "
+                f"{data.Driver} is currently in a {confidence_text}. "
+                f"The telemetry does not yet indicate severe tyre degradation or "
+                f"immediate performance collapse on the {data.Compound} compound. "
+                f"With tyre life at {int(data.TyreLife)} laps and track position "
+                f"P{int(data.Position)}, the AI strategy engine recommends extending "
+                f"the current stint to maximize tyre usage and maintain track position "
                 f"efficiency."
             )
 
@@ -195,7 +169,6 @@ def predict_with_explanation(data: PredictionInput):
         }
 
     except Exception as e:
-
         raise HTTPException(
             status_code=500,
             detail=f"Prediction explanation failed: {str(e)}"
@@ -204,22 +177,12 @@ def predict_with_explanation(data: PredictionInput):
 
 @app.post("/predict-with-langflow-explanation")
 def predict_with_langflow(data: PredictionInput):
-
     try:
-
         input_df = pd.DataFrame([data.dict()])
-
         prediction = model.predict(input_df)[0]
+        probability = model.predict_proba(input_df)[0].tolist()
 
-        probability = (
-            model.predict_proba(input_df)[0]
-            .tolist()
-        )
-
-        pit_probability = round(
-            probability[1] * 100,
-            1
-        )
+        pit_probability = round(probability[1] * 100, 1)
 
         telemetry_prompt = f"""
 Driver: {data.Driver}
@@ -237,19 +200,18 @@ Pit Stop Probability: {pit_probability}%
             "session_id": str(uuid.uuid4())
         }
 
-        headers = {
-            "x-api-key": LANGFLOW_API_KEY
-        }
+        headers = {}
+        if LANGFLOW_API_KEY:
+            headers["x-api-key"] = LANGFLOW_API_KEY
 
         response = requests.post(
-            LANGFLOW_URL,
+            get_langflow_url(),
             json=payload,
             headers=headers,
             timeout=120
         )
 
         response.raise_for_status()
-
         langflow_response = response.json()
 
         ai_explanation = (
@@ -265,8 +227,10 @@ Pit Stop Probability: {pit_probability}%
             "ai_explanation": ai_explanation
         }
 
-    except Exception as e:
+    except HTTPException:
+        raise
 
+    except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Langflow AI explanation failed: {str(e)}"
@@ -275,24 +239,15 @@ Pit Stop Probability: {pit_probability}%
 
 @app.get("/analytics/summary")
 def analytics_summary():
-
     try:
-
         return {
             "total_records": int(len(telemetry_df)),
-            "total_drivers": int(
-                telemetry_df["Driver"].nunique()
-            ),
-            "total_compounds": int(
-                telemetry_df["Compound"].nunique()
-            ),
-            "average_lap_time": float(
-                telemetry_df["LapTimeSeconds"].mean()
-            )
+            "total_drivers": int(telemetry_df["Driver"].nunique()),
+            "total_compounds": int(telemetry_df["Compound"].nunique()),
+            "average_lap_time": float(telemetry_df["LapTimeSeconds"].mean())
         }
 
     except Exception as e:
-
         raise HTTPException(
             status_code=500,
             detail=f"Analytics summary failed: {str(e)}"
@@ -301,21 +256,11 @@ def analytics_summary():
 
 @app.get("/analytics/drivers")
 def get_drivers():
-
     try:
-
-        drivers = sorted(
-            telemetry_df["Driver"]
-            .unique()
-            .tolist()
-        )
-
-        return {
-            "drivers": drivers
-        }
+        drivers = sorted(telemetry_df["Driver"].unique().tolist())
+        return {"drivers": drivers}
 
     except Exception as e:
-
         raise HTTPException(
             status_code=500,
             detail=f"Driver retrieval failed: {str(e)}"
@@ -324,9 +269,7 @@ def get_drivers():
 
 @app.get("/analytics/driver/{driver}")
 def driver_analytics(driver: str):
-
     try:
-
         driver_code = driver.upper()
 
         driver_df = telemetry_df[
@@ -334,42 +277,25 @@ def driver_analytics(driver: str):
         ]
 
         if driver_df.empty:
-
             raise HTTPException(
                 status_code=404,
-                detail=(
-                    f"No telemetry found for "
-                    f"driver {driver_code}"
-                )
+                detail=f"No telemetry found for driver {driver_code}"
             )
 
         return {
             "driver": driver_code,
-            "average_lap_time": float(
-                driver_df["LapTimeSeconds"].mean()
-            ),
-            "fastest_lap_time": float(
-                driver_df["LapTimeSeconds"].min()
-            ),
-            "slowest_lap_time": float(
-                driver_df["LapTimeSeconds"].max()
-            ),
+            "average_lap_time": float(driver_df["LapTimeSeconds"].mean()),
+            "fastest_lap_time": float(driver_df["LapTimeSeconds"].min()),
+            "slowest_lap_time": float(driver_df["LapTimeSeconds"].max()),
             "total_laps": int(len(driver_df)),
-            "stints": int(
-                driver_df["Stint"].nunique()
-            ),
-            "compounds_used": (
-                driver_df["Compound"]
-                .unique()
-                .tolist()
-            )
+            "stints": int(driver_df["Stint"].nunique()),
+            "compounds_used": driver_df["Compound"].unique().tolist()
         }
 
     except HTTPException:
         raise
 
     except Exception as e:
-
         raise HTTPException(
             status_code=500,
             detail=f"Driver analytics failed: {str(e)}"
@@ -378,21 +304,11 @@ def driver_analytics(driver: str):
 
 @app.get("/analytics/compound-usage")
 def compound_usage():
-
     try:
-
-        compound_counts = (
-            telemetry_df["Compound"]
-            .value_counts()
-            .to_dict()
-        )
-
-        return {
-            "compound_usage": compound_counts
-        }
+        compound_counts = telemetry_df["Compound"].value_counts().to_dict()
+        return {"compound_usage": compound_counts}
 
     except Exception as e:
-
         raise HTTPException(
             status_code=500,
             detail=f"Compound analytics failed: {str(e)}"
@@ -401,9 +317,7 @@ def compound_usage():
 
 @app.get("/analytics/pitstop-laps")
 def pitstop_laps():
-
     try:
-
         pit_df = telemetry_df[
             telemetry_df["PitStopNextLap"] == 1
         ]
@@ -419,12 +333,9 @@ def pitstop_laps():
             ]
         ].to_dict(orient="records")
 
-        return {
-            "pitstop_prediction_laps": records
-        }
+        return {"pitstop_prediction_laps": records}
 
     except Exception as e:
-
         raise HTTPException(
             status_code=500,
             detail=f"Pit stop analytics failed: {str(e)}"
