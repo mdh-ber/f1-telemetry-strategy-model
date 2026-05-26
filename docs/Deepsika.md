@@ -17,7 +17,7 @@ related to personas created 3 scenarios to understand more about needs, goals.
 pitched out our group project to the class, and also discussed personas and scenarios where we got to understand each others projects.
 Raised multiple questions regarding each others projects to understand projects better.
 
-12th May
+12/05/26
 
  I learned about Langflow and Ollama, successfully completed a Docker container setup, and launched the basic Langflow blueprint.
  successfully i also created and tested a small AI model workflow. 
@@ -28,9 +28,11 @@ Raised multiple questions regarding each others projects to understand projects 
  
  learned about langflow and ollama did docker up for langflow, in langflow created a flow to test and collect details of mdh university from the given URL, and successfully completed it.q
 
- 18th May
+ 18/05/26 
 
  embeding 
  vector 
  calculation the vector distance
  hugging face different embedding models filter , removing duuplicates in lang flow 
+
+
