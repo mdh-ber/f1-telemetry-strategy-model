@@ -36,7 +36,11 @@
 1. embeding 
 2. vector 
 3. calculation the vector distance
-4. hugging face different embedding models filter , removing duuplicates in lang flow 
+4. hugging face different embedding models filter , removing duuplicates in lang flow
+
+19th may
+
+1.finished the basic front end ui of our project. understanding and rectifying the errors in fast api
 
 
 27th May
