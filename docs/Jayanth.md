@@ -22,3 +22,14 @@ DATW :12-05-26
 learned about langflow and ollama. 
 finished a docker container and opened the basic langflow blueprint
 worked creating a small model and been successful in it.
+
+DATE :18-05-26
+started working with our group repository. finished backlogs, and issues sub tasks.
+worked on trail flow in langflow to understand about agent.
+
+DATE :19-05-26
+finished the basic front end ui of our project.
+understanding and rectifying the errors in fast api
+
+DATE :26-05-26
+DATE :27-05-26
