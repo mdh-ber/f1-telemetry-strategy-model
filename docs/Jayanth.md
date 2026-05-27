@@ -36,3 +36,4 @@ finished connect langflow and ollama with our project and connect ai explainator
 worked and updated more changes with langflow.
 
 DATE :27-05-26
+learned the concept of mcp. had worked on a trail trying to initiate mcp in a blank project. understanding the need and necessity of mcp and started implimenting mcp in our project langflow.
