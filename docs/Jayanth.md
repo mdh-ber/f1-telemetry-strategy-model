@@ -32,4 +32,7 @@ finished the basic front end ui of our project.
 understanding and rectifying the errors in fast api
 
 DATE :26-05-26
+finished connect langflow and ollama with our project and connect ai explainatory in our project website.
+worked and updated more changes with langflow.
+
 DATE :27-05-26
