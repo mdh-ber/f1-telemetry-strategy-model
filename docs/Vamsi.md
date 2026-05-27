@@ -38,3 +38,9 @@
 3. calculation the vector distance
 4. hugging face different embedding models filter , removing duuplicates in lang flow 
 
+
+27th May
+
+1. Connected with professor mohamaad and took class about Wazuh 
+2. worked on MCP server 
+
