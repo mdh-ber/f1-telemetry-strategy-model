@@ -35,4 +35,14 @@ Raised multiple questions regarding each others projects to understand projects 
  calculation the vector distance
  hugging face different embedding models filter , removing duuplicates in lang flow 
 
+26/05/26
+worked on our project F1, gave updateds to professors regarding the project.
+worked on iteration 3 with my team mates.
+
+27/05/26
+connected with professor mohemmad, where he expained regarding wazhu, and a lot more about cyber security. 
+explained logs, spoke about future in cyber security roles.
+learned what is MCP, worked on MCP server.
+tried connecting MCP to our project.
+
 
