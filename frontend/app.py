@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import plotly.express as px
 from pathlib import Path
 
 st.set_page_config(
@@ -12,6 +13,13 @@ st.set_page_config(
 
 BASE_API = "http://backend:8000"
 HERO_IMAGE = Path("frontend/assets/f1_car.png")
+
+RACE_DATA_FILES = [
+    Path("data/monaco_2024_race.csv"),
+    Path("../data/monaco_2024_race.csv"),
+    Path("data/multi_race_2024_raw.csv"),
+    Path("../data/multi_race_2024_raw.csv"),
+]
 
 if "history" not in st.session_state:
     st.session_state.history = []
@@ -29,6 +37,30 @@ def get_drivers():
 
 def get_driver_data(driver):
     return requests.get(f"{BASE_API}/analytics/driver/{driver}", timeout=10).json()
+
+
+@st.cache_data
+def load_race_dataframe():
+    for file_path in RACE_DATA_FILES:
+        if file_path.exists():
+            df = pd.read_csv(file_path)
+
+            if "LapTime" in df.columns:
+                df["LapTimeSeconds"] = pd.to_timedelta(
+                    df["LapTime"],
+                    errors="coerce"
+                ).dt.total_seconds()
+
+                # Remove invalid / unrealistic laps
+                df = df[
+                    (df["LapTimeSeconds"].notna()) &
+                    (df["LapTimeSeconds"] > 60) &
+                    (df["LapTimeSeconds"] < 200)
+                ]
+
+            return df
+
+    return None
 
 
 try:
@@ -93,22 +125,6 @@ html, body, [class*="css"] {
     font-size: 13px;
     font-weight: 800;
     color: #cbd5e1;
-}
-
-.hero {
-    margin-top: 42px;
-    display: grid;
-    grid-template-columns: 0.95fr 1.25fr;
-    gap: 38px;
-    align-items: center;
-}
-
-.kicker {
-    color: #ff1e00;
-    font-weight: 900;
-    letter-spacing: 1.6px;
-    font-size: 13px;
-    margin-bottom: 18px;
 }
 
 .hero-title {
@@ -364,8 +380,10 @@ with tab_sim:
                 b.metric("Stay Out", f"{stay_probability:.1f}%")
                 c.metric("Recommendation", recommendation)
 
+                explanation = result.get("ai_explanation") or result.get("explanation") or "No explanation returned."
+
                 st.markdown(
-                    f'<div class="ai-box">{result["ai_explanation"]}</div>',
+                    f'<div class="ai-box">{explanation}</div>',
                     unsafe_allow_html=True
                 )
 
@@ -392,51 +410,157 @@ with tab_sim:
 
 
 with tab_analytics:
-    st.markdown('<div class="section-title">Telemetry Analytics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Interactive Race Analytics</div>', unsafe_allow_html=True)
 
-    selected_driver = st.selectbox("Select Driver", drivers)
+    race_df = load_race_dataframe()
 
-    try:
-        driver_data = get_driver_data(selected_driver)
+    if race_df is None:
+        st.error("Race data CSV not found. Please check data/monaco_2024_race.csv or data/multi_race_2024_raw.csv")
+    else:
+        st.success("Race telemetry dataset loaded successfully.")
 
-        a1, a2, a3, a4 = st.columns(4)
-        a1.metric("Average Lap", f"{driver_data['average_lap_time']:.2f}s")
-        a2.metric("Fastest Lap", f"{driver_data['fastest_lap_time']:.2f}s")
-        a3.metric("Slowest Lap", f"{driver_data['slowest_lap_time']:.2f}s")
-        a4.metric("Total Stints", driver_data["stints"])
+        st.markdown("### Dataset Preview")
+        st.dataframe(race_df.head(), use_container_width=True)
 
-        st.markdown("### Compounds Used")
-        st.write(", ".join(driver_data["compounds_used"]))
+        if "Driver" in race_df.columns:
+            drivers_from_data = sorted(race_df["Driver"].dropna().unique())
+        else:
+            drivers_from_data = drivers
 
-    except Exception:
-        st.error("Could not load analytics.")
+        selected_driver = st.selectbox("Select Driver for Analytics", drivers_from_data)
 
-    st.markdown('<div class="section-title">Driver Comparison</div>', unsafe_allow_html=True)
+        if "Driver" in race_df.columns:
+            driver_df = race_df[race_df["Driver"] == selected_driver].copy()
+        else:
+            driver_df = race_df.copy()
 
-    dcol1, dcol2 = st.columns(2)
-    driver_1 = dcol1.selectbox("Driver 1", drivers, index=0)
-    driver_2 = dcol2.selectbox("Driver 2", drivers, index=1 if len(drivers) > 1 else 0)
+        c1, c2, c3, c4 = st.columns(4)
 
-    d1 = get_driver_data(driver_1)
-    d2 = get_driver_data(driver_2)
+        if "LapTimeSeconds" in driver_df.columns:
+            c1.metric("Average Lap", f"{driver_df['LapTimeSeconds'].mean():.2f}s")
+            c2.metric("Fastest Lap", f"{driver_df['LapTimeSeconds'].min():.2f}s")
+            c3.metric("Slowest Lap", f"{driver_df['LapTimeSeconds'].max():.2f}s")
+        else:
+            c1.metric("Average Lap", "N/A")
+            c2.metric("Fastest Lap", "N/A")
+            c3.metric("Slowest Lap", "N/A")
 
-    c1, c2 = st.columns(2)
+        if "Stint" in driver_df.columns:
+            c4.metric("Total Stints", driver_df["Stint"].nunique())
+        else:
+            c4.metric("Total Stints", "N/A")
 
-    with c1:
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-        st.subheader(driver_1)
-        st.metric("Average Lap", f"{d1['average_lap_time']:.2f}s")
-        st.metric("Fastest Lap", f"{d1['fastest_lap_time']:.2f}s")
-        st.metric("Stints", d1["stints"])
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("### Lap Time Trend")
 
-    with c2:
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-        st.subheader(driver_2)
-        st.metric("Average Lap", f"{d2['average_lap_time']:.2f}s")
-        st.metric("Fastest Lap", f"{d2['fastest_lap_time']:.2f}s")
-        st.metric("Stints", d2["stints"])
-        st.markdown("</div>", unsafe_allow_html=True)
+        if "LapNumber" in driver_df.columns and "LapTimeSeconds" in driver_df.columns:
+            fig_lap = px.line(
+                driver_df,
+                x="LapNumber",
+                y="LapTimeSeconds",
+                color="Compound" if "Compound" in driver_df.columns else None,
+                markers=True,
+                title=f"Lap Time Trend - {selected_driver}"
+            )
+            st.plotly_chart(fig_lap, use_container_width=True)
+        else:
+            st.warning("LapNumber or LapTimeSeconds column missing.")
+
+        st.markdown("### Tyre Compound Usage")
+
+        if "Compound" in driver_df.columns:
+            compound_usage = driver_df["Compound"].value_counts().reset_index()
+            compound_usage.columns = ["Compound", "Laps"]
+
+            fig_compound = px.bar(
+                compound_usage,
+                x="Compound",
+                y="Laps",
+                title=f"Tyre Compound Usage - {selected_driver}"
+            )
+            st.plotly_chart(fig_compound, use_container_width=True)
+        else:
+            st.warning("Compound column missing.")
+
+        st.markdown("### Tyre Life Trend")
+
+        if "LapNumber" in driver_df.columns and "TyreLife" in driver_df.columns:
+            fig_tyre = px.line(
+                driver_df,
+                x="LapNumber",
+                y="TyreLife",
+                color="Compound" if "Compound" in driver_df.columns else None,
+                markers=True,
+                title=f"Tyre Life Trend - {selected_driver}"
+            )
+            st.plotly_chart(fig_tyre, use_container_width=True)
+        else:
+            st.warning("LapNumber or TyreLife column missing.")
+
+        st.markdown("### Race Position Trend")
+
+        if "LapNumber" in driver_df.columns and "Position" in driver_df.columns:
+            fig_pos = px.line(
+                driver_df,
+                x="LapNumber",
+                y="Position",
+                markers=True,
+                title=f"Race Position Trend - {selected_driver}"
+            )
+            fig_pos.update_yaxes(autorange="reversed")
+            st.plotly_chart(fig_pos, use_container_width=True)
+        else:
+            st.warning("LapNumber or Position column missing.")
+
+        st.markdown("### Stint Summary")
+
+        if "Stint" in driver_df.columns:
+            summary_cols = {}
+
+            if "LapNumber" in driver_df.columns:
+                summary_cols["Total Laps"] = ("LapNumber", "count")
+
+            if "LapTimeSeconds" in driver_df.columns:
+                summary_cols["Average Lap Time"] = ("LapTimeSeconds", "mean")
+
+            if "TyreLife" in driver_df.columns:
+                summary_cols["Max Tyre Life"] = ("TyreLife", "max")
+
+            if summary_cols:
+                stint_summary = driver_df.groupby("Stint").agg(**summary_cols).reset_index()
+                st.dataframe(stint_summary, use_container_width=True)
+            else:
+                st.warning("No valid columns available for stint summary.")
+        else:
+            st.warning("Stint column missing.")
+
+        st.markdown('<div class="section-title">Driver Comparison</div>', unsafe_allow_html=True)
+
+        dcol1, dcol2 = st.columns(2)
+
+        driver_1 = dcol1.selectbox("Driver 1", drivers_from_data, index=0)
+        driver_2 = dcol2.selectbox(
+            "Driver 2",
+            drivers_from_data,
+            index=1 if len(drivers_from_data) > 1 else 0
+        )
+
+        if "Driver" in race_df.columns:
+            compare_df = race_df[race_df["Driver"].isin([driver_1, driver_2])].copy()
+        else:
+            compare_df = race_df.copy()
+
+        if "LapNumber" in compare_df.columns and "LapTimeSeconds" in compare_df.columns and "Driver" in compare_df.columns:
+            fig_compare = px.line(
+                compare_df,
+                x="LapNumber",
+                y="LapTimeSeconds",
+                color="Driver",
+                markers=True,
+                title=f"Lap Time Comparison: {driver_1} vs {driver_2}"
+            )
+            st.plotly_chart(fig_compare, use_container_width=True)
+        else:
+            st.warning("Required columns missing for driver comparison.")
 
 
 with tab_about:
