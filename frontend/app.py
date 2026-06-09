@@ -419,50 +419,52 @@ with tab_sim:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown('<div class="section-title">Historical vs Predicted Strategy Comparison</div>', unsafe_allow_html=True)
+        if st.session_state.history:
 
-        comparison_df = pd.DataFrame({
-            "Metric": [
-                "Driver",
-                "Lap",
-                "Compound",
-                "Position",
-                "Historical Strategy",
-                "Predicted Strategy"
-            ],
-            "Historical": [
-                driver,
-                lap_number,
-                compound,
-                position,
-                "Stay Out",
-                ""
-            ],
-            "Predicted": [
-                driver,
-                lap_number,
-                compound,
-                position,
-                "",
-                recommendation
-            ]
-        })
+         st.markdown('<div class="section-title">Historical vs Predicted Strategy Comparison</div>', unsafe_allow_html=True)
 
-        st.dataframe(comparison_df, use_container_width=True)
+         comparison_df = pd.DataFrame({
+             "Metric": [
+                 "Driver",
+                 "Lap",
+                 "Compound",
+                 "Position",
+                 "Historical Strategy",
+                 "Predicted Strategy"
+             ],
+             "Historical": [
+                 driver,
+                 lap_number,
+                 compound,
+                 position,
+                 "Stay Out",
+                 ""
+             ],
+             "Predicted": [
+                 driver,
+                 lap_number,
+                 compound,
+                 position,
+                 "",
+                 recommendation
+             ]
+         })
 
-        fig_compare = px.bar(
-            pd.DataFrame({
-                "Strategy": ["Historical", "Predicted"],
-                "Probability": [50, pit_probability]
-            }),
-            x="Strategy",
-            y="Probability",
-            title="Historical vs Predicted Strategy Confidence"
-        )
+         st.dataframe(comparison_df, use_container_width=True)
 
-        st.plotly_chart(fig_compare, use_container_width=True)
+         fig_compare = px.bar(
+             pd.DataFrame({
+                 "Strategy": ["Historical", "Predicted"],
+                 "Probability": [50, pit_probability]
+             }),
+             x="Strategy",
+             y="Probability",
+             title="Historical vs Predicted Strategy Confidence"
+         )
 
-        st.divider()
+         st.plotly_chart(fig_compare, use_container_width=True)
+
+         st.divider()
 
     st.markdown('<div class="section-title">Simulation History</div>', unsafe_allow_html=True)
     
