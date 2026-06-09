@@ -380,6 +380,23 @@ with tab_sim:
                 b.metric("Stay Out", f"{stay_probability:.1f}%")
                 c.metric("Recommendation", recommendation)
 
+                st.markdown("### Strategy Recommendation Visualization")
+
+                strategy_df = pd.DataFrame({
+                    "Decision": ["Pit", "Stay Out"],
+                    "Probability": [pit_probability, stay_probability]
+                })
+
+                fig_strategy = px.bar(
+                    strategy_df,
+                    x="Decision",
+                    y="Probability",
+                    color="Decision",
+                    title="Pit Stop Recommendation Confidence"
+                )
+
+                st.plotly_chart(fig_strategy, use_container_width=True)
+
                 explanation = result.get("ai_explanation") or result.get("explanation") or "No explanation returned."
 
                 st.markdown(
