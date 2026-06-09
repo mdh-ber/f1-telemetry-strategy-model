@@ -36,5 +36,20 @@
 1. embeding 
 2. vector 
 3. calculation the vector distance
-4. hugging face different embedding models filter , removing duuplicates in lang flow 
+4. hugging face different embedding models filter , removing duuplicates in lang flow
+
+19th may
+
+1. finished the basic front end ui of our project. 
+2. understanding and rectifying the errors in fast api
+
+26th May
+
+1. finished connect langflow and ollama with our project and connect ai explainatory in our project website.
+2. worked and updated more changes with langflow.
+
+27th May
+
+1. Connected with professor mohamaad and took class about Wazuh 
+2. worked on MCP server 
 
