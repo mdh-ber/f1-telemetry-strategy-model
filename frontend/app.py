@@ -429,12 +429,62 @@ with tab_analytics:
 
         selected_driver = st.selectbox("Select Driver for Analytics", drivers_from_data)
 
+        st.markdown("### Dynamic Telemetry Filters")
+
+        filter_col1, filter_col2, filter_col3 = st.columns([1, 1, 1])
+
+        with filter_col1:
+            compound_filter = st.multiselect(
+                "Tyre Compound",
+                options=sorted(race_df["Compound"].dropna().unique())
+                if "Compound" in race_df.columns else [],
+                default=sorted(race_df["Compound"].dropna().unique())
+                if "Compound" in race_df.columns else []
+            )
+
+        with filter_col2:
+            stint_filter = st.multiselect(
+                "Stint",
+                options=sorted(race_df["Stint"].dropna().unique())
+                if "Stint" in race_df.columns else [],
+                default=sorted(race_df["Stint"].dropna().unique())
+                if "Stint" in race_df.columns else []
+            )
+
+        with filter_col3:
+            if "LapNumber" in race_df.columns:
+                lap_range = st.slider(
+                "Lap Range",
+                int(race_df["LapNumber"].min()),
+                int(race_df["LapNumber"].max()),
+                (
+                    int(race_df["LapNumber"].min()),
+                    int(race_df["LapNumber"].max())
+                )
+            )
+
+        st.divider()
+
         if "Driver" in race_df.columns:
             driver_df = race_df[race_df["Driver"] == selected_driver].copy()
         else:
             driver_df = race_df.copy()
 
-        c1, c2, c3, c4 = st.columns(4)
+        if "Compound" in driver_df.columns:
+            driver_df = driver_df[
+                driver_df["Compound"].isin(compound_filter)
+            ]
+
+        if "Stint" in driver_df.columns:
+            driver_df = driver_df[
+                driver_df["Stint"].isin(stint_filter)
+            ]
+
+        if "LapNumber" in driver_df.columns:
+            driver_df = driver_df[
+                (driver_df["LapNumber"] >= lap_range[0]) &
+                (driver_df["LapNumber"] <= lap_range[1])
+            ]
 
         if "LapTimeSeconds" in driver_df.columns:
             c1.metric("Average Lap", f"{driver_df['LapTimeSeconds'].mean():.2f}s")
