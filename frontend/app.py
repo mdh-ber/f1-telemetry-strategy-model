@@ -533,7 +533,7 @@ with tab_analytics:
         else:
             st.warning("Stint column missing.")
 
-        st.markdown('<div class="section-title">Driver Comparison</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Driver Strategy Comparison</div>', unsafe_allow_html=True)
 
         dcol1, dcol2 = st.columns(2)
 
@@ -546,8 +546,14 @@ with tab_analytics:
 
         if "Driver" in race_df.columns:
             compare_df = race_df[race_df["Driver"].isin([driver_1, driver_2])].copy()
+            driver_1_df = race_df[race_df["Driver"] == driver_1].copy()
+            driver_2_df = race_df[race_df["Driver"] == driver_2].copy()
         else:
             compare_df = race_df.copy()
+            driver_1_df = race_df.copy()
+            driver_2_df = race_df.copy()
+
+        st.markdown("### Lap Time Comparison")
 
         if "LapNumber" in compare_df.columns and "LapTimeSeconds" in compare_df.columns and "Driver" in compare_df.columns:
             fig_compare = px.line(
@@ -560,7 +566,90 @@ with tab_analytics:
             )
             st.plotly_chart(fig_compare, use_container_width=True)
         else:
-            st.warning("Required columns missing for driver comparison.")
+            st.warning("Required columns missing for lap time comparison.")
+
+        st.markdown("### Strategy Metrics Comparison")
+
+        m1, m2 = st.columns(2)
+
+        with m1:
+            st.markdown(f"#### {driver_1}")
+
+            if "LapTimeSeconds" in driver_1_df.columns:
+                st.metric("Average Lap Time", f"{driver_1_df['LapTimeSeconds'].mean():.2f}s")
+                st.metric("Fastest Lap", f"{driver_1_df['LapTimeSeconds'].min():.2f}s")
+                st.metric("Slowest Lap", f"{driver_1_df['LapTimeSeconds'].max():.2f}s")
+
+            if "Stint" in driver_1_df.columns:
+                st.metric("Total Stints", driver_1_df["Stint"].nunique())
+
+            if "Compound" in driver_1_df.columns:
+                compounds_1 = ", ".join(driver_1_df["Compound"].dropna().unique())
+                st.write(f"**Compounds Used:** {compounds_1}")
+
+        with m2:
+            st.markdown(f"#### {driver_2}")
+
+            if "LapTimeSeconds" in driver_2_df.columns:
+                st.metric("Average Lap Time", f"{driver_2_df['LapTimeSeconds'].mean():.2f}s")
+                st.metric("Fastest Lap", f"{driver_2_df['LapTimeSeconds'].min():.2f}s")
+                st.metric("Slowest Lap", f"{driver_2_df['LapTimeSeconds'].max():.2f}s")
+
+            if "Stint" in driver_2_df.columns:
+                st.metric("Total Stints", driver_2_df["Stint"].nunique())
+
+            if "Compound" in driver_2_df.columns:
+                compounds_2 = ", ".join(driver_2_df["Compound"].dropna().unique())
+                st.write(f"**Compounds Used:** {compounds_2}")
+
+        st.markdown("### Tyre Compound Strategy Comparison")
+
+        if "Compound" in compare_df.columns and "Driver" in compare_df.columns:
+            compound_compare = (
+                compare_df
+                .groupby(["Driver", "Compound"])
+                .size()
+                .reset_index(name="Laps")
+            )
+
+            fig_compound_compare = px.bar(
+                compound_compare,
+                x="Compound",
+                y="Laps",
+                color="Driver",
+                barmode="group",
+                title=f"Tyre Compound Usage: {driver_1} vs {driver_2}"
+            )
+            st.plotly_chart(fig_compound_compare, use_container_width=True)
+        else:
+            st.warning("Required columns missing for compound comparison.")
+
+        st.markdown("### Stint Strategy Comparison")
+
+        if "Stint" in compare_df.columns and "Driver" in compare_df.columns and "LapNumber" in compare_df.columns:
+            stint_compare = (
+                compare_df
+                .groupby(["Driver", "Stint"])
+                .agg(
+                    Total_Laps=("LapNumber", "count"),
+                    Avg_Lap_Time=("LapTimeSeconds", "mean")
+                )
+                .reset_index()
+            )
+
+            st.dataframe(stint_compare, use_container_width=True)
+
+            fig_stint_compare = px.bar(
+                stint_compare,
+                x="Stint",
+                y="Total_Laps",
+                color="Driver",
+                barmode="group",
+                title=f"Stint Length Comparison: {driver_1} vs {driver_2}"
+            )
+            st.plotly_chart(fig_stint_compare, use_container_width=True)
+        else:
+            st.warning("Required columns missing for stint comparison.")
 
 
 with tab_about:
