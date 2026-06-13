@@ -8,7 +8,12 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
- 
+    networks:
+      - caddy
+    labels:
+      caddy: api.pitsenseai.duckdns.org
+      caddy.reverse_proxy: "{{upstreams 8000}}"
+
   frontend:
     build:
       context: .
@@ -20,3 +25,46 @@ services:
       - .:/app
     depends_on:
       - backend
+    networks:
+      - caddy
+    labels:
+      caddy: pitsenseai.duckdns.org
+      caddy.reverse_proxy: "{{upstreams 8501}}"
+
+  langflow:
+    image: langflowai/langflow:latest
+    container_name: langflow
+    ports:
+      - "7860:7860"
+    environment:
+      DO_NOT_TRACK: "true"
+      LANGFLOW_CONFIG_DIR: /app/langflow
+      LANGFLOW_DATABASE_URL: sqlite:////app/langflow/langflow.db
+      LANGFLOW_CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000","http://79.143.178.75:8501","https://pitsenseai.duckdns.org","https://flow.pitsenseai.duckdns.org"]'
+      LANGFLOW_CORS_ALLOW_METHODS: '["GET","POST","PUT","PATCH","DELETE","OPTIONS"]'
+      LANGFLOW_CORS_ALLOW_HEADERS: '["Content-Type","Authorization","x-api-key"]'
+      LANGFLOW_CORS_ALLOW_CREDENTIALS: "True"
+      LANGFLOW_SKIP_AUTH_AUTO_LOGIN: "True"
+    volumes:
+      - ./langflow-data:/app/langflow
+    restart: unless-stopped
+    networks:
+      - caddy
+    labels:
+      caddy: flow.pitsenseai.duckdns.org
+      caddy.reverse_proxy: "{{upstreams 7860}}"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama-data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - caddy
+
+networks:
+  caddy:
+    external: true
