@@ -2,13 +2,15 @@
 
 set -e
 
-cd /opt/apps/f1-telemetry-strategy-model
+git config --global --add safe.directory /app
 
-git config --global --add safe.directory /opt/apps/f1-telemetry-strategy-model
+cd /app
 
-git checkout prod
-git pull origin prod
+git fetch origin
+git reset --hard origin/prod
 
-docker compose up -d --build
+chmod +x deploy.sh
+
+docker compose up -d --build backend frontend
 
 docker ps
