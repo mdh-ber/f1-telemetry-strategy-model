@@ -41,7 +41,15 @@ features = [
     "Stint",
     "Position",
     "Compound",
-    "Driver"
+    "Driver",
+    "CurrentStintLap",
+    "PitStopsSoFar",
+    "PreviousCompound",
+    "PreviousStintLength",
+    "RaceProgress",
+    "AvgLast3LapTime",
+    "AvgLast5LapTime",
+    "TyreDegradationRate"
 ]
 
 target = "PitStopNextLap"
@@ -49,8 +57,25 @@ target = "PitStopNextLap"
 X = df[features]
 y = df[target]
 
-categorical_features = ["Compound", "Driver"]
-numeric_features = ["LapNumber", "TyreLife", "Stint", "Position"]
+categorical_features = [
+    "Compound",
+    "Driver",
+    "PreviousCompound"
+]
+
+numeric_features = [
+    "LapNumber",
+    "TyreLife",
+    "Stint",
+    "Position",
+    "CurrentStintLap",
+    "PitStopsSoFar",
+    "PreviousStintLength",
+    "RaceProgress",
+    "AvgLast3LapTime",
+    "AvgLast5LapTime",
+    "TyreDegradationRate"
+]
 
 preprocessor = ColumnTransformer(
     transformers=[
@@ -220,7 +245,7 @@ try:
             "Importance": importances
         }).sort_values(by="Importance", ascending=False)
 
-        print(feature_importance_df.head(15))
+        print(feature_importance_df.head(20))
     else:
         print("Selected classifier does not support feature_importances_.")
 

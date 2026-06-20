@@ -332,10 +332,27 @@ with tab_sim:
         position = st.slider("Track Position", 1, 20, 3)
 
         compound = st.selectbox(
-            "Tyre Compound",
+            "Current Tyre Compound",
             ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"],
             index=2
         )
+
+        st.markdown("#### Race Context")
+
+        previous_compound = st.selectbox(
+            "Previous Tyre Compound",
+            ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"],
+            index=2
+        )
+
+        previous_stint_length = st.slider("Previous Stint Length", 1, 80, 25)
+        avg_last_3_lap_time = st.number_input("Average Last 3 Lap Time (seconds)", 60.0, 200.0, 90.0)
+        avg_last_5_lap_time = st.number_input("Average Last 5 Lap Time (seconds)", 60.0, 200.0, 90.0)
+        tyre_degradation_rate = st.number_input("Tyre Degradation Rate", -10.0, 10.0, 0.0)
+
+        current_stint_lap = tyre_life
+        pit_stops_so_far = max(0, stint - 1)
+        race_progress = lap_number / 70.0
 
         validation_errors = []
 
@@ -384,7 +401,15 @@ with tab_sim:
                 "Stint": stint,
                 "Position": position,
                 "Compound": compound,
-                "Driver": driver
+                "Driver": driver,
+                "CurrentStintLap": current_stint_lap,
+                "PitStopsSoFar": pit_stops_so_far,
+                "PreviousCompound": previous_compound,
+                "PreviousStintLength": previous_stint_length,
+                "RaceProgress": race_progress,
+                "AvgLast3LapTime": avg_last_3_lap_time,
+                "AvgLast5LapTime": avg_last_5_lap_time,
+                "TyreDegradationRate": tyre_degradation_rate
             }
 
             with st.spinner("Running ML model, Langflow agent, and Ollama strategist..."):
