@@ -524,6 +524,28 @@ with tab_sim:
 
                 explanation = result.get("ai_explanation") or result.get("explanation") or "No explanation returned."
 
+                reasoning = []
+
+                if tyre_life >= 30:
+                    reasoning.append("• High tyre life increases pit stop likelihood")
+
+                if stint >= 2:
+                    reasoning.append("• Longer stint indicates increasing tyre wear")
+
+                if tyre_degradation_rate >= 1.0:
+                    reasoning.append("• Tyre degradation is impacting performance")
+
+                if pit_probability >= 50:
+                    reasoning.append("• Model confidence favors a pit stop")
+
+                if position <= 5:
+                    reasoning.append("• Strong track position may benefit from strategy optimization")
+
+                st.markdown("### Prediction Reasoning")
+
+                for item in reasoning:
+                    st.markdown(item)
+
                 st.markdown(
                     f'<div class="ai-box">{explanation}</div>',
                     unsafe_allow_html=True
