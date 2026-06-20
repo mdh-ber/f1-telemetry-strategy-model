@@ -268,11 +268,29 @@ def predict_with_langflow(data: PredictionInput):
 
         telemetry_prompt = f"""
 Driver: {data.Driver}
-Lap: {data.LapNumber}
+
+Lap Number: {data.LapNumber}
 Tyre Life: {data.TyreLife}
-Compound: {data.Compound}
+Current Stint: {data.Stint}
 Position: {data.Position}
-Pit Stop Probability: {pit_probability}%
+
+Current Compound: {data.Compound}
+Previous Compound: {data.PreviousCompound}
+
+Current Stint Lap: {data.CurrentStintLap}
+Previous Stint Length: {data.PreviousStintLength}
+
+Pit Stops So Far: {data.PitStopsSoFar}
+Race Progress: {data.RaceProgress}
+
+Average Last 3 Lap Time: {data.AvgLast3LapTime}
+Average Last 5 Lap Time: {data.AvgLast5LapTime}
+
+Tyre Degradation Rate: {data.TyreDegradationRate}
+
+Predicted Pit Probability: {pit_probability}%
+
+Explain whether the driver should pit now or stay out and mention the most influential factors.
 """
 
         payload = {
