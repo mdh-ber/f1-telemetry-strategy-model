@@ -41,6 +41,63 @@ def get_langflow_url():
 
     return f"{LANGFLOW_BASE_URL.rstrip('/')}/api/v1/run/{LANGFLOW_FLOW_ID}"
 
+def build_prediction_dataframe(data):
+    return pd.DataFrame([{
+        "LapNumber": data.LapNumber,
+        "TyreLife": data.TyreLife,
+        "Stint": data.Stint,
+        "Position": data.Position,
+        "Compound": data.Compound,
+        "Driver": data.Driver,
+
+        "CurrentStintLap": (
+            data.CurrentStintLap
+            if data.CurrentStintLap is not None
+            else data.TyreLife
+        ),
+
+        "PitStopsSoFar": (
+            data.PitStopsSoFar
+            if data.PitStopsSoFar is not None
+            else max(0, int(data.Stint - 1))
+        ),
+
+        "PreviousCompound": (
+            data.PreviousCompound
+            if data.PreviousCompound is not None
+            else data.Compound
+        ),
+
+        "PreviousStintLength": (
+            data.PreviousStintLength
+            if data.PreviousStintLength is not None
+            else data.TyreLife
+        ),
+
+        "RaceProgress": (
+            data.RaceProgress
+            if data.RaceProgress is not None
+            else data.LapNumber / 70.0
+        ),
+
+        "AvgLast3LapTime": (
+            data.AvgLast3LapTime
+            if data.AvgLast3LapTime is not None
+            else 90.0
+        ),
+
+        "AvgLast5LapTime": (
+            data.AvgLast5LapTime
+            if data.AvgLast5LapTime is not None
+            else 90.0
+        ),
+
+        "TyreDegradationRate": (
+            data.TyreDegradationRate
+            if data.TyreDegradationRate is not None
+            else 0.0
+        )
+    }])
 
 class PredictionInput(BaseModel):
     LapNumber: float
@@ -49,6 +106,15 @@ class PredictionInput(BaseModel):
     Position: float
     Compound: str
     Driver: str
+
+    CurrentStintLap: float | None = None
+    PitStopsSoFar: float | None = None
+    PreviousCompound: str | None = None
+    PreviousStintLength: float | None = None
+    RaceProgress: float | None = None
+    AvgLast3LapTime: float | None = None
+    AvgLast5LapTime: float | None = None
+    TyreDegradationRate: float | None = None
 
     @validator("LapNumber")
     def validate_lap(cls, value):
@@ -97,7 +163,7 @@ def home():
 @app.post("/predict")
 def predict_pitstop(data: PredictionInput):
     try:
-        input_df = pd.DataFrame([data.dict()])
+        input_df = build_prediction_dataframe(data)
         prediction = model.predict(input_df)[0]
         probability = model.predict_proba(input_df)[0].tolist()
 
@@ -117,7 +183,7 @@ def predict_pitstop(data: PredictionInput):
 @app.post("/predict-with-explanation")
 def predict_with_explanation(data: PredictionInput):
     try:
-        input_df = pd.DataFrame([data.dict()])
+        input_df = build_prediction_dataframe(data)
         prediction = model.predict(input_df)[0]
         probability = model.predict_proba(input_df)[0].tolist()
 
@@ -178,11 +244,27 @@ def predict_with_explanation(data: PredictionInput):
 @app.post("/predict-with-langflow-explanation")
 def predict_with_langflow(data: PredictionInput):
     try:
-        input_df = pd.DataFrame([data.dict()])
+        input_df = build_prediction_dataframe(data)
         prediction = model.predict(input_df)[0]
         probability = model.predict_proba(input_df)[0].tolist()
 
         pit_probability = round(probability[1] * 100, 1)
+
+        fallback_explanation = (
+            f"Pit probability is {pit_probability}%. "
+            f"Based on lap {data.LapNumber}, tyre life {data.TyreLife}, "
+            f"stint {data.Stint}, position {data.Position}, and compound {data.Compound}, "
+            f"the recommended strategy is "
+            f"{'PIT THIS LAP' if prediction == 1 else 'STAY OUT'}."
+        )
+
+        if not LANGFLOW_BASE_URL or not LANGFLOW_FLOW_ID:
+            return {
+                "pit_stop_next_lap": int(prediction),
+                "probability_no_pit": probability[0],
+                "probability_pit": probability[1],
+                "ai_explanation": fallback_explanation
+            }
 
         telemetry_prompt = f"""
 Driver: {data.Driver}
@@ -204,21 +286,43 @@ Pit Stop Probability: {pit_probability}%
         if LANGFLOW_API_KEY:
             headers["x-api-key"] = LANGFLOW_API_KEY
 
-        response = requests.post(
-            get_langflow_url(),
-            json=payload,
-            headers=headers,
-            timeout=120
-        )
+        try:
+            response = requests.post(
+                get_langflow_url(),
+                json=payload,
+                headers=headers,
+                timeout=120
+            )
 
-        response.raise_for_status()
-        langflow_response = response.json()
+            response.raise_for_status()
+            langflow_response = response.json()
 
-        ai_explanation = (
-            langflow_response["outputs"][0]
-            ["outputs"][0]
-            ["results"]["message"]["text"]
-        )
+            ai_explanation = None
+
+            try:
+                ai_explanation = (
+                    langflow_response["outputs"][0]
+                    ["outputs"][0]
+                    ["results"]["message"]["text"]
+                )
+            except Exception:
+                pass
+
+            try:
+                if not ai_explanation:
+                    ai_explanation = (
+                        langflow_response["outputs"][0]
+                        ["outputs"][0]
+                        ["artifacts"]["message"]
+                    )
+            except Exception:
+                pass
+
+            if not ai_explanation:
+                ai_explanation = fallback_explanation
+
+        except Exception:
+            ai_explanation = fallback_explanation
 
         return {
             "pit_stop_next_lap": int(prediction),
@@ -227,13 +331,10 @@ Pit Stop Probability: {pit_probability}%
             "ai_explanation": ai_explanation
         }
 
-    except HTTPException:
-        raise
-
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Langflow AI explanation failed: {str(e)}"
+            detail=f"Prediction failed: {str(e)}"
         )
 
 
