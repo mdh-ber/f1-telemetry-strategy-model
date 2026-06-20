@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # Load multi-race dataset
-df = pd.read_csv("data/multi_race_raw.csv")
+df = pd.read_csv("data/multi_race_2024_raw.csv")
 
 # Convert LapTime to seconds
 if "LapTime" in df.columns:
