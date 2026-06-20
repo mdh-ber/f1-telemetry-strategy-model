@@ -2,7 +2,7 @@ import os
 import joblib
 import pandas as pd
 
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -207,6 +207,46 @@ print(grid_search.best_params_)
 
 print("Best Cross Validation F1 Score:")
 print(grid_search.best_score_)
+
+print("\n==============================")
+print("RANDOMIZED SEARCH OPTIMIZATION")
+print("==============================")
+
+random_search_pipeline = Pipeline(
+    steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", RandomForestClassifier(
+            random_state=42,
+            class_weight="balanced"
+        ))
+    ]
+)
+
+random_param_grid = {
+    "classifier__n_estimators": [50, 100, 200, 300],
+    "classifier__max_depth": [5, 10, 20, None],
+    "classifier__min_samples_split": [2, 5, 10],
+    "classifier__min_samples_leaf": [1, 2, 4]
+}
+
+random_search = RandomizedSearchCV(
+    estimator=random_search_pipeline,
+    param_distributions=random_param_grid,
+    n_iter=10,
+    cv=3,
+    scoring="f1",
+    random_state=42,
+    n_jobs=-1
+)
+
+random_search.fit(X_train, y_train)
+
+print("Randomized Search Best Parameters:")
+print(random_search.best_params_)
+
+print("Randomized Search Best Cross Validation F1 Score:")
+print(random_search.best_score_)
+
 
 print("\n==============================")
 print("FINAL MODEL BENCHMARK")
