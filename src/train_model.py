@@ -25,6 +25,8 @@ from sklearn.metrics import (
 
 DATA_PATH = "data/ml/multi_race_ml_dataset.csv"
 MODEL_PATH = "models/pitstop_prediction_model.pkl"
+FEATURE_IMPORTANCE_PATH = "models/feature_importance.csv"
+SHAP_IMPORTANCE_PATH = "models/shap_importance.csv"
 
 df = pd.read_csv(DATA_PATH)
 
@@ -295,6 +297,16 @@ try:
         }).sort_values(by="Importance", ascending=False)
 
         print(feature_importance_df.head(20))
+
+        feature_importance_df.to_csv(
+            FEATURE_IMPORTANCE_PATH,
+            index=False
+        )
+
+        print(
+            f"Feature importance saved to {FEATURE_IMPORTANCE_PATH}"
+        )
+
     else:
         print("Selected classifier does not support feature_importances_.")
 
@@ -336,11 +348,14 @@ try:
     print("Top SHAP Features:")
     print(shap_importance_df.head(15))
 
+    shap_importance_df.to_csv(SHAP_IMPORTANCE_PATH, index=False)
+    print(f"SHAP importance saved to {SHAP_IMPORTANCE_PATH}")
+
 except Exception as e:
     print("SHAP analysis could not be generated.")
     print(str(e))
 
-    
+
 
 print("\n==============================")
 print("MODEL SAVED")
