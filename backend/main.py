@@ -296,13 +296,11 @@ Tyre Degradation Rate: {data.TyreDegradationRate}
 
 Predicted Pit Probability: {pit_probability}%
 
-ML Recommendation: {recommendation}
+FINAL DECISION FROM ML MODEL: {recommendation}
 
-ML Recommendation:
-{"PIT THIS LAP" if pit_probability > 50 else "STAY OUT"}
-
-Explain WHY the machine learning model produced this recommendation.
+Explain WHY the machine learning model produced this final decision.
 Do not generate a different recommendation.
+Repeat the final decision exactly.
 """
 
         payload = {
