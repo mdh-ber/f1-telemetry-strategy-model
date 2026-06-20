@@ -298,7 +298,11 @@ Predicted Pit Probability: {pit_probability}%
 
 ML Recommendation: {recommendation}
 
-Explain why the ML model produced this recommendation.
+ML Recommendation:
+{"PIT THIS LAP" if pit_probability > 50 else "STAY OUT"}
+
+Explain WHY the machine learning model produced this recommendation.
+Do not generate a different recommendation.
 """
 
         payload = {
