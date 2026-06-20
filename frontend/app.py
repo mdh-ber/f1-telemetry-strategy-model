@@ -470,7 +470,22 @@ with tab_sim:
                     x="Decision",
                     y="Probability",
                     color="Decision",
-                    title="Pit Stop Recommendation Confidence"
+                    title="Pit vs Stay Out Probability Comparison"
+                )
+
+                fig_strategy.update_traces(
+                    texttemplate='%{y:.1f}%',
+                    textposition='outside'
+                )
+
+                confidence_gap = abs(pit_probability - stay_probability)
+
+                fig_strategy.add_annotation(
+                    x=0.5,
+                    y=max(pit_probability, stay_probability) + 5,
+                    text=f"Confidence Gap: {confidence_gap:.1f}%",
+                    showarrow=False,
+                    font=dict(size=14)
                 )
 
                 st.plotly_chart(fig_strategy, use_container_width=True)
