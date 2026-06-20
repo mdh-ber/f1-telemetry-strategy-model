@@ -1,6 +1,7 @@
 import os
 import joblib
 import pandas as pd
+import shap
 
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 from sklearn.preprocessing import OneHotEncoder
@@ -11,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from xgboost import XGBClassifier
+
 
 from sklearn.metrics import (
     accuracy_score,
@@ -302,6 +304,43 @@ except Exception as e:
 
 os.makedirs("models", exist_ok=True)
 joblib.dump(best_model, MODEL_PATH)
+
+
+print("\n==============================")
+print("SHAP EXPLAINABILITY ANALYSIS")
+print("==============================")
+
+try:
+    X_test_transformed = preprocessor_fitted.transform(X_test)
+
+    if hasattr(X_test_transformed, "toarray"):
+        X_test_transformed = X_test_transformed.toarray()
+
+    explainer = shap.TreeExplainer(classifier)
+    shap_values = explainer.shap_values(X_test_transformed)
+
+    if isinstance(shap_values, list):
+        shap_values_for_class = shap_values[1]
+    elif len(shap_values.shape) == 3:
+        shap_values_for_class = shap_values[:, :, 1]
+    else:
+        shap_values_for_class = shap_values
+
+    mean_shap_values = abs(shap_values_for_class).mean(axis=0)
+
+    shap_importance_df = pd.DataFrame({
+        "Feature": all_feature_names,
+        "Mean_SHAP_Importance": mean_shap_values
+    }).sort_values(by="Mean_SHAP_Importance", ascending=False)
+
+    print("Top SHAP Features:")
+    print(shap_importance_df.head(15))
+
+except Exception as e:
+    print("SHAP analysis could not be generated.")
+    print(str(e))
+
+    
 
 print("\n==============================")
 print("MODEL SAVED")
