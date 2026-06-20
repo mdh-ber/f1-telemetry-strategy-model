@@ -432,10 +432,31 @@ with tab_sim:
                     recommendation = "STAY OUT"
                     st.markdown('<div class="result-green">✓ CONTINUE CURRENT STINT</div>', unsafe_allow_html=True)
 
+
+                confidence_gap = abs(pit_probability - stay_probability)
+
+                if confidence_gap >= 40:
+                    confidence = "HIGH"
+                elif confidence_gap >= 20:
+                    confidence = "MEDIUM"
+                else:
+                    confidence = "LOW"
+
+                if 45 <= pit_probability <= 55:
+                    risk_level = "HIGH RISK"
+                elif 35 <= pit_probability <= 65:
+                    risk_level = "MEDIUM RISK"
+                else:
+                    risk_level = "LOW RISK"
+
                 a, b, c = st.columns(3)
                 a.metric("Pit Probability", f"{pit_probability:.1f}%")
                 b.metric("Stay Out", f"{stay_probability:.1f}%")
                 c.metric("Recommendation", recommendation)
+
+                d, e = st.columns(2)
+                d.metric("Prediction Confidence", confidence)
+                e.metric("Strategy Risk", risk_level)
 
                 st.markdown("### Strategy Recommendation Visualization")
 
