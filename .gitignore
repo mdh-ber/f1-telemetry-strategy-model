@@ -5,3 +5,5 @@ __pycache__/
 data/
 models/
 .env
+langflow-data/
+ollama-data/
