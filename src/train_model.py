@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from xgboost import XGBClassifier
 
 from sklearn.metrics import (
     accuracy_score,
@@ -113,6 +114,12 @@ models = {
         class_weight="balanced"
     ),
     "Gradient Boosting": GradientBoostingClassifier(
+        random_state=42
+    ),
+    "XGBoost": XGBClassifier(
+        n_estimators=100,
+        max_depth=6,
+        learning_rate=0.1,
         random_state=42
     )
 }
