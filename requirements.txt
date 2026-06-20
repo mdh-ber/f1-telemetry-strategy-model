@@ -10,3 +10,4 @@ streamlit
 joblib
 python-dotenv
 plotly
+xgboost
