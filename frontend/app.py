@@ -524,6 +524,18 @@ with tab_sim:
 
                 explanation = result.get("ai_explanation") or result.get("explanation") or "No explanation returned."
 
+                friendly_explanation = (
+                    f"🏎️ Race Engineer Summary\n\n"
+                    f"Driver {driver} is currently running P{position}.\n\n"
+                    f"Key Findings:\n"
+                    f"• Tyres have completed {tyre_life:.0f} laps\n"
+                    f"• Driver is currently in stint {stint}\n"
+                    f"• Pit probability is {pit_probability:.1f}%\n"
+                    f"• Current compound is {compound}\n\n"
+                    f"Recommendation: {recommendation}\n\n"
+                    f"Risk Level: {risk_level}"
+                )
+
                 reasoning = []
 
                 if tyre_life >= 30:
@@ -547,7 +559,7 @@ with tab_sim:
                     st.markdown(item)
 
                 st.markdown(
-                    f'<div class="ai-box">{explanation}</div>',
+                    f'<div class="ai-box">{friendly_explanation.replace(chr(10), "<br>")}</div>',
                     unsafe_allow_html=True
                 )
 
