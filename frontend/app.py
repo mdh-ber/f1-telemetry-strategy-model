@@ -490,6 +490,38 @@ with tab_sim:
 
                 st.plotly_chart(fig_strategy, use_container_width=True)
 
+                st.markdown("### Top Influencing Factors")
+
+                factor_df = pd.DataFrame({
+                        "Factor": [
+                            "Tyre Life",
+                            "Current Stint",
+                            "Tyre Degradation",
+                            "Track Position",
+                            "Race Progress"
+                        ],
+                        "Influence": [
+                            "High",
+                            "High",
+                            "Medium",
+                            "Medium",
+                            "Low"
+                        ],
+                        "Reason": [
+                            "Older tyres increase pit stop likelihood",
+                            "Longer stint increases pit window probability",
+                            "Higher degradation increases strategy risk",
+                            "Track position affects undercut and overcut value",
+                            "Later race phase changes pit stop timing"
+                        ]
+                })
+
+                st.dataframe(
+                    factor_df,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
                 explanation = result.get("ai_explanation") or result.get("explanation") or "No explanation returned."
 
                 st.markdown(
