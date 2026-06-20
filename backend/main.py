@@ -265,7 +265,13 @@ def predict_with_langflow(data: PredictionInput):
                 "probability_pit": probability[1],
                 "ai_explanation": fallback_explanation
             }
-
+        recommendation = (
+            "PIT THIS LAP"
+            if prediction == 1
+            else "STAY OUT"
+        )
+        
+        
         telemetry_prompt = f"""
 Driver: {data.Driver}
 
@@ -290,7 +296,9 @@ Tyre Degradation Rate: {data.TyreDegradationRate}
 
 Predicted Pit Probability: {pit_probability}%
 
-Explain whether the driver should pit now or stay out and mention the most influential factors.
+ML Recommendation: {recommendation}
+
+Explain why the ML model produced this recommendation.
 """
 
         payload = {
