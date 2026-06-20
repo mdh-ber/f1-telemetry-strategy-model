@@ -317,6 +317,10 @@ Do not generate a different recommendation.
             headers["x-api-key"] = LANGFLOW_API_KEY
 
         try:
+            print("\n===== TELEMETRY SENT TO LANGFLOW =====")
+            print(telemetry_prompt)
+            print("======================================\n")
+
             response = requests.post(
                 get_langflow_url(),
                 json=payload,
@@ -326,6 +330,10 @@ Do not generate a different recommendation.
 
             response.raise_for_status()
             langflow_response = response.json()
+
+            print("\n===== LANGFLOW RESPONSE =====")
+            print(langflow_response)
+            print("=============================\n")
 
             ai_explanation = None
 
