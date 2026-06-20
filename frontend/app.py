@@ -337,7 +337,39 @@ with tab_sim:
             index=2
         )
 
-        simulate = st.button("🏁 Run AI Strategy Simulation", use_container_width=True)
+        validation_errors = []
+
+        if tyre_life > lap_number:
+            validation_errors.append("Tyre life cannot be greater than lap number.")
+
+        compound_limits = {
+            "SOFT": 30,
+            "MEDIUM": 45,
+            "HARD": 65,
+            "INTERMEDIATE": 35,
+            "WET": 35
+        }
+
+        if tyre_life > compound_limits[compound]:
+            validation_errors.append(
+                f"{compound} tyre life of {tyre_life} laps is unrealistic. "
+                f"Recommended maximum for {compound} is {compound_limits[compound]} laps."
+            )
+
+        if stint == 1 and tyre_life > 35 and compound in ["SOFT", "MEDIUM"]:
+            validation_errors.append(
+                f"Stint 1 with {compound} tyres aged {tyre_life} laps is unlikely. "
+                "Please use a more realistic race scenario."
+            )
+
+        for error in validation_errors:
+            st.warning(error)
+
+        simulate = st.button(
+            "🏁 Run AI Strategy Simulation",
+            use_container_width=True,
+            disabled=len(validation_errors) > 0
+        )
 
         st.markdown("</div>", unsafe_allow_html=True)
 
