@@ -20,10 +20,20 @@ from sklearn.metrics import (
     confusion_matrix
 )
 
-DATA_PATH = "data/ml/monaco_2024_ml_dataset.csv"
+DATA_PATH = "data/ml/multi_race_ml_dataset.csv"
 MODEL_PATH = "models/pitstop_prediction_model.pkl"
 
 df = pd.read_csv(DATA_PATH)
+
+print("\n==============================")
+print("DATASET INFORMATION")
+print("==============================")
+print("Dataset path:", DATA_PATH)
+print("Dataset shape:", df.shape)
+print("\nTarget distribution:")
+print(df["PitStopNextLap"].value_counts())
+print("\nTarget distribution (%):")
+print(df["PitStopNextLap"].value_counts(normalize=True) * 100)
 
 features = [
     "LapNumber",
@@ -56,6 +66,12 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42,
     stratify=y
 )
+
+print("\nTrain target distribution:")
+print(y_train.value_counts())
+
+print("\nTest target distribution:")
+print(y_test.value_counts())
 
 models = {
     "Logistic Regression": LogisticRegression(
@@ -111,8 +127,11 @@ for model_name, classifier in models.items():
     print(f"Precision: {precision:.4f}")
     print(f"Recall   : {recall:.4f}")
     print(f"F1 Score : {f1:.4f}")
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
 
 results_df = pd.DataFrame(results)
+
 print("\n==============================")
 print("MODEL COMPARISON SUMMARY")
 print("==============================")
@@ -173,6 +192,9 @@ print(confusion_matrix(y_test, final_predictions))
 
 print("\nClassification Report:")
 print(classification_report(y_test, final_predictions, zero_division=0))
+
+print("\nPrediction distribution:")
+print(pd.Series(final_predictions).value_counts())
 
 print("\n==============================")
 print("FEATURE IMPORTANCE ANALYSIS")
