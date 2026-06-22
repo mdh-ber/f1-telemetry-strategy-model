@@ -12,21 +12,21 @@ DEEPSIKA NIMMAGADDA.
 
 Project Overview
 
-This project applies Machine Learning techniques to analyze and predict pit stop strategies in Formula 1 racing using real telemetry and race data.
+PitSense AI aims to revolutionize Formula 1 race strategy by providing an intelligent, explainable, and data-driven decision support platform for pit-stop planning.
 
-The goal is not to “perfectly optimize race strategy,” but to model and predict pit stop decision patterns based on historical race behavior, tyre usage, and lap performance trends.
+The platform leverages historical and live race telemetry, machine learning, and explainable AI to predict optimal pit-stop opportunities while clearly communicating the reasoning behind every recommendation. By combining predictive analytics with natural-language explanations, PitSense AI helps strategists, engineers, analysts, researchers, and motorsport enthusiasts make faster and more informed strategic decisions.
 
 ---
 
-Objectives
+Our vision is to bridge the gap between complex race data and actionable strategy insights through a production-ready system that delivers:
 
-- Collect and process Formula 1 telemetry data
-- Analyze race strategies across drivers and teams
-- Identify patterns in pit stop decisions
-- Build a machine learning model to predict:
-  - Whether a pit stop is likely on a given lap
-  - Or the probable pit stop window
-- Deploy the model using a simple API and containerized environment
+- Accurate pit-stop strategy predictions using machine learning.
+- Transparent AI explanations that build user trust and understanding.
+- Interactive analytics and race visualizations for strategy evaluation.
+- Real-time decision support powered by scalable cloud infrastructure.
+- A platform that can evolve toward live telemetry integration, multi-driver strategy comparison, and advanced race simulation.
+
+Ultimately, PitSense AI seeks to become a comprehensive motorsport intelligence platform that transforms raw telemetry into strategic advantage.
 
 ---
 
