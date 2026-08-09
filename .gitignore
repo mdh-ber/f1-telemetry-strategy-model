@@ -7,3 +7,4 @@ models/
 .env
 langflow-data/
 ollama-data/
+.streamlit/secrets.toml

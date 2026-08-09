@@ -4,12 +4,24 @@ import pandas as pd
 import plotly.express as px
 from pathlib import Path
 
+
 st.set_page_config(
     page_title="PitSense AI",
     page_icon="🏁",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+if not st.user.is_logged_in:
+    st.title("PitSense AI")
+    st.write("Please log in to continue.")
+    
+    if st.button("Log in"):
+        st.login()
+    
+    st.stop()
+
+    # Logged-in user information
+
 
 BASE_API = "http://backend:8000"
 HERO_IMAGE = Path("frontend/assets/f1_car.png")
@@ -223,19 +235,63 @@ html, body, [class*="css"] {
 [data-testid="stSidebar"] {
     display: none;
 }
+
+/* Hide Streamlit top header */
+[data-testid="stHeader"] {
+    display: none;
+}
+
+[data-testid="stToolbar"] {
+    display: none;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 
-st.markdown("""
-<div class="topbar">
+# =========================
+# Top Navigation / Account
+# =========================
+
+header_left, header_middle, header_right = st.columns([3, 4, 2])
+
+with header_left:
+    st.markdown("""
     <div class="brand">
         <div class="f1-logo">F1</div>
         <div class="brand-text">PITSENSE <span>AI</span></div>
     </div>
-    <div class="nav-note">AI Strategy Platform • Telemetry Intelligence • F1 Analytics</div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+with header_middle:
+    st.markdown("""
+    <div class="nav-note" style="text-align:center; padding-top:12px;">
+        AI Strategy Platform • Telemetry Intelligence • F1 Analytics
+    </div>
+    """, unsafe_allow_html=True)
+
+with header_right:
+    user_name = getattr(st.user, "name", None)
+    user_email = getattr(st.user, "email", "")
+
+    if user_name:
+        st.markdown(
+            f"<div style='text-align:right; font-weight:700;'>👤 {user_name}</div>",
+            unsafe_allow_html=True
+        )
+    elif user_email:
+        st.markdown(
+            f"<div style='text-align:right; font-weight:700;'>👤 {user_email}</div>",
+            unsafe_allow_html=True
+        )
+
+    if st.button("Log out", use_container_width=True):
+        st.logout()
+
+st.markdown(
+    "<hr style='border:none; border-top:1px solid rgba(255,255,255,0.08); margin-top:10px;'>",
+    unsafe_allow_html=True
+)
 
 
 tab_home, tab_features, tab_sim, tab_analytics, tab_about, tab_docs = st.tabs(
